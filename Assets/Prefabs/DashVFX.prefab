@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 3779225434233369410}
   - component: {fileID: 541915218869975464}
   - component: {fileID: 1711808041098174977}
-  - component: {fileID: 2941029518913981512}
-  - component: {fileID: 3202800914126245854}
+  - component: {fileID: 4140025287958915602}
   m_Layer: 0
   m_Name: DashVFX
   m_TagString: Untagged
@@ -42,7 +41,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3341252077608029899}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -98,11 +97,11 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3341252077608029899}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: -6734681152855922730, guid: a173e38e99faa334d9f62cc3796f15b2, type: 3}
   m_CullingMode: 0
-  m_UpdateMode: 0
+  m_UpdateMode: 2
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
@@ -112,7 +111,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2941029518913981512
+--- !u!114 &4140025287958915602
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,18 +120,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 3341252077608029899}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dae4646cbb7a5e54c98bd3b9b254b5e8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &3202800914126245854
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3341252077608029899}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7996a9e972f5aba44b94de014bca7bb2, type: 3}
+  m_Script: {fileID: 11500000, guid: 80a91cbf3b1f8f24cacd711a1a83f8c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

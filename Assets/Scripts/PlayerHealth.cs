@@ -2,10 +2,8 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [SerializeField] private int maxHP = 3;
+    [SerializeField] private int maxHP = 5;
     private int hp;
-
-    private bool isDead = false;
 
     private void Awake()
     {
@@ -14,25 +12,18 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-        if (isDead) return;
-
         hp -= amount;
-        Debug.Log($"PLAYER HP: {hp}/{maxHP}");
+        hp = Mathf.Max(0, hp);
+
+        Debug.Log($"HP: {hp}/{maxHP}");
 
         if (hp <= 0)
         {
-            isDead = true;
-            Die();
+            Debug.Log("PLAYER DEAD");
+            // Aquí luego reinicias escena o UI.
         }
     }
-
-    private void Die()
-    {
-        Debug.Log("PLAYER DEAD");
-        // Aquí luego puedes:
-        // - reiniciar escena
-        // - mostrar UI de Game Over
-        // - desactivar controles, etc.
-    }
 }
+
+
 
