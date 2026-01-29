@@ -1,55 +1,56 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D))]
 public class DashHitbox2D : MonoBehaviour
 {
-    private Collider2D hitbox;
+    [Header("Damage")]
+    [SerializeField] private int bossDamage = 1;
+    [SerializeField] private int enemyDamage = 999;
 
-    // Cada enemigo solo puede recibir 1 golpe por dash
+    private bool active;
+
+    // Guardamos IDs de targets golpeados DURANTE ESTE DASH
     private readonly HashSet<int> hitThisDash = new HashSet<int>();
-
-    private int currentDashSerial = 0;
-
-    private void Awake()
-    {
-        hitbox = GetComponent<Collider2D>();
-        hitbox.isTrigger = true;
-        hitbox.enabled = false;
-    }
 
     public void BeginDash(int dashSerial)
     {
-        currentDashSerial = dashSerial;
-        hitThisDash.Clear();
-        SetActive(true);
+        active = true;
+        hitThisDash.Clear();   //  clave: se resetea cada dash
     }
 
     public void EndDash()
     {
-        SetActive(false);
-    }
-
-    public void SetActive(bool active)
-    {
-        if (hitbox != null)
-            hitbox.enabled = active;
+        active = false;
+        hitThisDash.Clear();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Enemy"))
+        if (!active) return;
+
+        // ===== BOSS =====
+        BossHealth boss = other.GetComponentInParent<BossHealth>();
+        if (boss != null && !boss.IsDead)
+        {
+            int bossId = boss.gameObject.GetInstanceID();   //  por boss, no por collider
+            if (hitThisDash.Contains(bossId)) return;        // 1 golpe por dash
+
+            hitThisDash.Add(bossId);
+            boss.TakeDamage(bossDamage);
+            Debug.Log($"DASH HIT BOSS (hp now?) dmg={bossDamage}");
             return;
+        }
 
-        // Si el enemy tiene varios colliders, intentamos coger el root
-        GameObject enemyGO = other.attachedRigidbody != null ? other.attachedRigidbody.gameObject : other.gameObject;
+        // ===== ENEMIGO NORMAL =====
+        EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
+        if (enemy != null)
+        {
+            int enemyId = enemy.gameObject.GetInstanceID();
+            if (hitThisDash.Contains(enemyId)) return;
 
-        int id = enemyGO.GetInstanceID();
-        if (!hitThisDash.Add(id))
-            return; // ya golpeado en este dash
-
-        EnemyHealth hp = enemyGO.GetComponent<EnemyHealth>();
-        if (hp != null)
-            hp.TakeDamage(1);
+            hitThisDash.Add(enemyId);
+            enemy.TakeDamage(enemyDamage);
+            return;
+        }
     }
 }

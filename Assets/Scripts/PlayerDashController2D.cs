@@ -98,10 +98,14 @@ public class PlayerDashController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isDashing && !isCooldown)
-            rb.linearVelocity = moveInput * moveSpeed;
-        else
-            rb.linearVelocity = Vector2.zero;
+        rb.linearVelocity = moveInput * moveSpeed;
+
+        //if (!isDashing && !isCooldown)
+        //    rb.linearVelocity = moveInput * moveSpeed;
+        //else
+        //{
+        //    rb.linearVelocity = Vector2.zero;
+        //}
     }
 
     private void UpdateFacing(Vector2 input)
@@ -203,7 +207,12 @@ public class PlayerDashController2D : MonoBehaviour
         isCooldown = true;
         rb.linearVelocity = Vector2.zero;
 
-        yield return new WaitForSecondsRealtime(dashCooldownAfterCombo);
+        float t = 0f;
+        while(t <= dashCooldownAfterCombo)
+        {
+            t += Time.deltaTime;
+            yield return null;
+        }
 
         dashesUsed = 0;
         isCooldown = false;
