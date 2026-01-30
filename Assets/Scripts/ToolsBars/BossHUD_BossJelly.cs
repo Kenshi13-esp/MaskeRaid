@@ -1,15 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Reflection;
 
 public class BossHealthHUD_NoTouch : MonoBehaviour
 {
     [Header("UI")]
-    [SerializeField] private GameObject hudRoot; // BossHUD (panel)
-    [SerializeField] private Image fillImage;    // HP_Fill
+    [SerializeField] private GameObject hudRoot;
+    [SerializeField] private Image fillImage;
 
     [Header("Boss Find")]
-    [Tooltip("Si tu boss root tiene Tag 'Boss', ponlo aqu�. Si lo dejas vac�o, buscar� el primer BossHealth activo.")]
+    [Tooltip("Si tu boss root tiene Tag 'Boss', ponlo aquí. Si lo dejas vacío, buscará el primer BossHealth activo.")]
     [SerializeField] private string bossTag = "Boss";
 
     [Header("Options")]
@@ -17,20 +16,9 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
 
     private BossHealth boss;
 
-    // Campos privados en BossHealth
-    private FieldInfo hpField;
-    private FieldInfo maxHpField;
-
     private void Awake()
     {
         if (hudRoot == null) hudRoot = gameObject;
-
-        var t = typeof(BossHealth);
-        hpField = t.GetField("hp", BindingFlags.Instance | BindingFlags.NonPublic);
-        maxHpField = t.GetField("maxHP", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        if (hpField == null || maxHpField == null)
-            Debug.LogError("BossHealthHUD: No encuentro los campos privados 'hp' o 'maxHP' en BossHealth.");
 
         EnsureBottomPosition();
         TryFindBoss();
@@ -40,7 +28,6 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
 
     private void Update()
     {
-        // Si no hay boss o est� desactivado o muerto: intenta encontrar otro (boss rush)
         if (boss == null || !boss.gameObject.activeInHierarchy || boss.IsDead)
         {
             TryFindBoss();
@@ -52,7 +39,6 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
 
     private void TryFindBoss()
     {
-        // 1) Por Tag (recomendado)
         if (!string.IsNullOrEmpty(bossTag))
         {
             var go = GameObject.FindGameObjectWithTag(bossTag);
@@ -67,7 +53,6 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
             }
         }
 
-        // 2) Fallback: primer BossHealth activo en escena
         BossHealth any = FindFirstObjectByType<BossHealth>();
         if (any != null && any.gameObject.activeInHierarchy && !any.IsDead)
         {
@@ -82,14 +67,14 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
     {
         if (fillImage == null) return;
 
-        if (boss == null || hpField == null || maxHpField == null)
+        if (boss == null)
         {
             fillImage.fillAmount = 0f;
             return;
         }
 
-        int hp = (int)hpField.GetValue(boss);
-        int max = (int)maxHpField.GetValue(boss);
+        int hp = boss.GetCurrentHealth();
+        int max = boss.GetMaxHealth();
         float pct = (max <= 0) ? 0f : Mathf.Clamp01((float)hp / max);
 
         fillImage.fillAmount = pct;
@@ -114,3 +99,4 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
         rectTransform.anchoredPosition = new Vector2(0f, 20f);
     }
 }
+
