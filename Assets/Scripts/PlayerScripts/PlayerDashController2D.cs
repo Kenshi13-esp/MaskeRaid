@@ -93,7 +93,12 @@ public class PlayerDashController2D : MonoBehaviour
         if (isCharging)
         {
             chargeTimer += Time.unscaledDeltaTime;
-            chargeTimer = Mathf.Min(chargeTimer, maxChargeTime);
+            
+            if (chargeTimer >= maxChargeTime)
+            {
+                chargeTimer = maxChargeTime;
+                ReleaseDash();
+            }
         }
     }
 

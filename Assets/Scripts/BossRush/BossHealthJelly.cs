@@ -32,6 +32,16 @@ public class BossHealth : MonoBehaviour
             gameObject.SetActive(false);
         }
     }
+
+    public int GetCurrentHealth()
+    {
+        return hp;
+    }
+
+    public int GetMaxHealth()
+    {
+        return maxHP;
+    }
 }
 
 
