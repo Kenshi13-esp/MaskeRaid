@@ -8,8 +8,8 @@ public class BossJumpingController : MonoBehaviour, IBossController
     [Header("Movement Settings")]
     [SerializeField] private float jumpDuration = 1.2f;
     [SerializeField] private float dashSpeed = 25f;
-    [SerializeField] private float idleTimeBetweenAttacks = 0.4f;
-    [SerializeField] private float timeBetweenPatterns = 1f;
+    [SerializeField] private float idleTimeBetweenAttacks = 1.2f;
+    [SerializeField] private float timeBetweenPatterns = 1.5f;
 
     [Header("Jump Settings")]
     [SerializeField] private int jumpsPhaseOne = 3;
@@ -39,6 +39,9 @@ public class BossJumpingController : MonoBehaviour, IBossController
     [Header("Shadow")]
     [SerializeField] private GameObject shadowPrefab;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+
     private Rigidbody2D rb;
     private BossHealth bossHealth;
     private Transform player;
@@ -67,6 +70,11 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
+        }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
         }
 
         GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -211,6 +219,11 @@ public class BossJumpingController : MonoBehaviour, IBossController
         isInAir = true;
         Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), true);
 
+        if (animator != null)
+        {
+            animator.SetTrigger("Jump");
+        }
+
         float halfDuration = (jumpDuration / speedMultiplier) / 2f;
         float delayDuration = shadowMoveDelay / speedMultiplier;
 
@@ -254,6 +267,11 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
         rb.MovePosition(offScreenPosEnd);
 
+        if (animator != null)
+        {
+            animator.SetTrigger("Fall");
+        }
+
         elapsed = 0f;
         while (elapsed < halfDuration)
         {
@@ -282,6 +300,11 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
         Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), false);
         isInAir = false;
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Idle");
+        }
 
         ExecuteImpact();
     }
@@ -329,6 +352,12 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (player == null || bossHealth.IsDead) yield break;
 
         isDashingBoss = true;
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Dash");
+        }
+
         Vector2 startPos = rb.position;
         Vector2 playerPos = new Vector2(player.position.x, player.position.y);
         Vector2 directionToPlayer = (playerPos - startPos).normalized;
@@ -400,6 +429,11 @@ public class BossJumpingController : MonoBehaviour, IBossController
         }
 
         isDashingBoss = false;
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Idle");
+        }
     }
 
     private void ExecuteImpact()

@@ -871,7 +871,7 @@ GameObject:
   - component: {fileID: 632094638}
   - component: {fileID: 632094637}
   m_Layer: 5
-  m_Name: Fill_Jelly
+  m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -891,10 +891,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1549834996}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -379}
-  m_SizeDelta: {x: 1000, y: 15}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -2.3424, y: 16}
+  m_SizeDelta: {x: 971.8994, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &632094637
 MonoBehaviour:
@@ -1016,7 +1016,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bossDamage: 1
-  enemyDamage: 999
 --- !u!1 &744289211
 GameObject:
   m_ObjectHideFlags: 0
@@ -1449,7 +1448,7 @@ GameObject:
   - component: {fileID: 1538625188}
   - component: {fileID: 1538625187}
   m_Layer: 5
-  m_Name: BG_Jelly
+  m_Name: BG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1469,10 +1468,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1549834996}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -379}
-  m_SizeDelta: {x: 1000, y: 15}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -2.3429, y: 16}
+  m_SizeDelta: {x: 971.9, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1538625187
 MonoBehaviour:
@@ -1526,7 +1525,7 @@ GameObject:
   - component: {fileID: 1549834993}
   - component: {fileID: 1549834997}
   m_Layer: 5
-  m_Name: HPJellyBoss
+  m_Name: HPBoss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1803,9 +1802,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1643664646}
-  - component: {fileID: 1643664645}
   - component: {fileID: 1643664647}
-  - component: {fileID: 1643664649}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1813,26 +1810,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1643664645
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1643664644}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ca9aeae8e3c8a7489758b8699ab35f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  totalWaves: 30
-  startEnemies: 2
-  addPerWave: 1
-  minSpawn: {x: -7, y: -4}
-  maxSpawn: {x: 7, y: 4}
-  enemyPrefab: {fileID: 3836464844837386065, guid: 05746dece13768849b74d9dd658460e1, type: 3}
-  enemyParent: {fileID: 0}
-  player: {fileID: 0}
 --- !u!4 &1643664646
 Transform:
   m_ObjectHideFlags: 0
@@ -1860,41 +1837,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 666505739e9ce504c96e1bf012ee544d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rounds:
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 3
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
+  bossPrefabs:
+  - {fileID: 5116301957241195193, guid: 1e7fd678d7418e94b925af5500f83358, type: 3}
+  - {fileID: 7670425333492334388, guid: a45664044a33bcc45b93ae8965bff1c7, type: 3}
+  introDelay: 1
+  afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
-  player: {fileID: 0}
---- !u!114 &1643664649
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1643664644}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1891a512a1cf4e4419cd9487bf93be11, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  player: {fileID: 1878435159}
 --- !u!1 &1644948941
 GameObject:
   m_ObjectHideFlags: 0
@@ -2407,6 +2356,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 500
+  knockbackDuration: 0.5
+  sideForce: 18
+  jumpHeight: 1.8
+  postLandingInvincibility: 0.5
+  postDashInvincibilityFrames: 1
 --- !u!1 &1942714744
 GameObject:
   m_ObjectHideFlags: 0
