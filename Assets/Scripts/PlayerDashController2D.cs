@@ -201,6 +201,9 @@ public class PlayerDashController2D : MonoBehaviour
         isDashing = false;
         dashesUsed++;
 
+        if (playerHealth != null)
+            playerHealth.GrantPostDashInvincibility();
+
         if (dashesUsed >= comboDashes)
         {
             if (cooldownCoroutine != null)
