@@ -44,6 +44,7 @@ public class BossHulkController2D : MonoBehaviour
     [Header("Damage On Contact")]
     [SerializeField] private int contactDamage = 1;
     [SerializeField] private float hitCooldown = 0.5f;
+    [SerializeField] private float knockbackForceMultiplier = 1f;
 
     [Header("Visual Feedback")]
     [SerializeField] private SpriteRenderer spriteRenderer;
@@ -237,10 +238,13 @@ public class BossHulkController2D : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Debug.Log($"[BossHulk] Colisión con: {collision.gameObject.name}, Layer: {LayerMask.LayerToName(collision.gameObject.layer)}, Tag: {collision.gameObject.tag}");
+
         if (((1 << collision.gameObject.layer) & wallsMask) != 0)
         {
             if (currentState == State.Dashing)
             {
+                Debug.Log("[BossHulk] Chocó con pared, deteniendo dash");
                 rb.linearVelocity = Vector2.zero;
                 currentState = State.Recovery;
             }
@@ -248,6 +252,7 @@ public class BossHulkController2D : MonoBehaviour
 
         if (collision.collider.CompareTag("Player"))
         {
+            Debug.Log("[BossHulk] ¡Detectado Player! Intentando hacer daño...");
             TryDealDamageToPlayer(collision.collider);
         }
     }
@@ -262,12 +267,27 @@ public class BossHulkController2D : MonoBehaviour
 
     private void TryDealDamageToPlayer(Collider2D playerCol)
     {
-        if (Time.time < lastHitTime + hitCooldown) return;
+        Debug.Log($"[BossHulk] TryDealDamageToPlayer - lastHit: {lastHitTime}, current: {Time.time}, cooldown: {hitCooldown}");
+        
+        if (Time.time < lastHitTime + hitCooldown)
+        {
+            Debug.Log("[BossHulk] Aún en cooldown, no hace daño");
+            return;
+        }
+        
         lastHitTime = Time.time;
 
         PlayerHealth hp = playerCol.GetComponent<PlayerHealth>();
         if (hp != null)
-            hp.TakeDamage(contactDamage);
+        {
+            Vector2 knockbackDirection = ((Vector2)playerCol.transform.position - (Vector2)transform.position).normalized;
+            Debug.Log($"[BossHulk] ¡HACIENDO DAÑO! Damage: {contactDamage}, Knockback: {knockbackDirection}");
+            hp.TakeDamage(contactDamage, knockbackDirection, knockbackForceMultiplier);
+        }
+        else
+        {
+            Debug.LogWarning("[BossHulk] ¡PlayerHealth no encontrado en el Player!");
+        }
     }
 
     private void OnDrawGizmosSelected()
