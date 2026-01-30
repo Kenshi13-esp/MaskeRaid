@@ -41,6 +41,8 @@ public class PlayerDashController2D : MonoBehaviour
 
     private Rigidbody2D rb;
     private PlayerHealth playerHealth;
+    private BoxCollider2D boxCollider;
+    private Collider2D[] enemyColliders;
 
     private Vector2 moveInput;
     private Vector2 lastMoveDir = Vector2.right;
@@ -62,10 +64,34 @@ public class PlayerDashController2D : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         playerHealth = GetComponent<PlayerHealth>();
+        boxCollider = GetComponent<BoxCollider2D>();
         defaultFixedDeltaTime = Time.fixedDeltaTime;
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        CacheEnemyColliders();
+    }
+
+    private void CacheEnemyColliders()
+    {
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        GameObject[] bosses = GameObject.FindGameObjectsWithTag("Boss");
+        
+        int totalEnemies = enemies.Length + bosses.Length;
+        enemyColliders = new Collider2D[totalEnemies];
+        
+        int index = 0;
+        foreach (GameObject enemy in enemies)
+        {
+            Collider2D col = enemy.GetComponent<Collider2D>();
+            if (col != null) enemyColliders[index++] = col;
+        }
+        foreach (GameObject boss in bosses)
+        {
+            Collider2D col = boss.GetComponent<Collider2D>();
+            if (col != null) enemyColliders[index++] = col;
+        }
     }
 
     public void OnMove(InputAction.CallbackContext ctx)
@@ -166,6 +192,18 @@ public class PlayerDashController2D : MonoBehaviour
         isDashing = true;
         rb.linearVelocity = Vector2.zero;
 
+        if (playerHealth != null)
+            playerHealth.SetDashInvincibility(true);
+
+        if (boxCollider != null && enemyColliders != null)
+        {
+            foreach (Collider2D enemyCol in enemyColliders)
+            {
+                if (enemyCol != null)
+                    Physics2D.IgnoreCollision(boxCollider, enemyCol, true);
+            }
+        }
+
         dashSerialCounter++;
         if (dashHitbox != null)
             dashHitbox.BeginDash(dashSerialCounter);
@@ -197,6 +235,18 @@ public class PlayerDashController2D : MonoBehaviour
 
         if (dashHitbox != null)
             dashHitbox.EndDash();
+
+        if (boxCollider != null && enemyColliders != null)
+        {
+            foreach (Collider2D enemyCol in enemyColliders)
+            {
+                if (enemyCol != null)
+                    Physics2D.IgnoreCollision(boxCollider, enemyCol, false);
+            }
+        }
+
+        if (playerHealth != null)
+            playerHealth.SetDashInvincibility(false);
 
         isDashing = false;
         dashesUsed++;

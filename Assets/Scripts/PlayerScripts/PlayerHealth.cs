@@ -9,7 +9,10 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float sideForce = 18f;
     [SerializeField] private float jumpHeight = 1.8f;
     [SerializeField] private float postLandingInvincibility = 0.5f;
-    [SerializeField] private float postDashInvincibilityFrames = 1f;
+    
+    [Header("Post-Dash Invincibility")]
+    [Tooltip("Tiempo de invulnerabilidad después del dash (segundos). 0.15 = ~9 frames a 60fps")]
+    [SerializeField] private float postDashInvincibilityTime = 0.15f;
 
     private int hp;
     private Rigidbody2D rb;
@@ -19,6 +22,7 @@ public class PlayerHealth : MonoBehaviour
 
     private bool isLaunched = false;
     private bool isInvincible = false;
+    private bool isDashInvincible = false;
 
     public bool IsLaunched => isLaunched;
 
@@ -33,7 +37,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier)
     {
-        if (isLaunched || isInvincible) return;
+        if (isLaunched || isInvincible || isDashInvincible) return;
 
         hp -= amount;
         hp = Mathf.Max(0, hp);
@@ -108,14 +112,16 @@ public class PlayerHealth : MonoBehaviour
         StartCoroutine(PostDashInvincibilityRoutine());
     }
 
+    public void SetDashInvincibility(bool invincible)
+    {
+        isDashInvincible = invincible;
+    }
+
     private IEnumerator PostDashInvincibilityRoutine()
     {
         isInvincible = true;
         
-        for (int i = 0; i < postDashInvincibilityFrames; i++)
-        {
-            yield return null;
-        }
+        yield return new WaitForSeconds(postDashInvincibilityTime);
         
         isInvincible = false;
     }
