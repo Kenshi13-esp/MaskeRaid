@@ -6,6 +6,8 @@ public class BossHealth : MonoBehaviour
     private int hp;
 
     public bool IsDead => hp <= 0;
+    public int CurrentHP => hp;
+    public int MaxHP => maxHP;
 
     private void Awake()
     {
