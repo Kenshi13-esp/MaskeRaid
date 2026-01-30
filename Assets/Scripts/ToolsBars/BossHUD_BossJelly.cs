@@ -9,11 +9,11 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
     [SerializeField] private Image fillImage;    // HP_Fill
 
     [Header("Boss Find")]
-    [Tooltip("Si tu boss root tiene Tag 'Boss', ponlo aquí. Si lo dejas vacío, buscará el primer BossHealth activo.")]
+    [Tooltip("Si tu boss root tiene Tag 'Boss', ponlo aquï¿½. Si lo dejas vacï¿½o, buscarï¿½ el primer BossHealth activo.")]
     [SerializeField] private string bossTag = "Boss";
 
     [Header("Options")]
-    [SerializeField] private bool hideWhenNoBoss = true;
+    [SerializeField] private bool hideWhenNoBoss = false;
 
     private BossHealth boss;
 
@@ -25,7 +25,6 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
     {
         if (hudRoot == null) hudRoot = gameObject;
 
-        // BossHealth: private int hp; [SerializeField] private int maxHP;
         var t = typeof(BossHealth);
         hpField = t.GetField("hp", BindingFlags.Instance | BindingFlags.NonPublic);
         maxHpField = t.GetField("maxHP", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -33,14 +32,15 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
         if (hpField == null || maxHpField == null)
             Debug.LogError("BossHealthHUD: No encuentro los campos privados 'hp' o 'maxHP' en BossHealth.");
 
+        EnsureBottomPosition();
         TryFindBoss();
         RefreshVisibility();
-        UpdateBar(); // pinta al inicio
+        UpdateBar();
     }
 
     private void Update()
     {
-        // Si no hay boss o está desactivado o muerto: intenta encontrar otro (boss rush)
+        // Si no hay boss o estï¿½ desactivado o muerto: intenta encontrar otro (boss rush)
         if (boss == null || !boss.gameObject.activeInHierarchy || boss.IsDead)
         {
             TryFindBoss();
@@ -99,5 +99,18 @@ public class BossHealthHUD_NoTouch : MonoBehaviour
     {
         if (!hideWhenNoBoss || hudRoot == null) return;
         hudRoot.SetActive(boss != null);
+    }
+
+    private void EnsureBottomPosition()
+    {
+        if (hudRoot == null) return;
+
+        RectTransform rectTransform = hudRoot.GetComponent<RectTransform>();
+        if (rectTransform == null) return;
+
+        rectTransform.anchorMin = new Vector2(0.5f, 0f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0f);
+        rectTransform.pivot = new Vector2(0.5f, 0f);
+        rectTransform.anchoredPosition = new Vector2(0f, 20f);
     }
 }

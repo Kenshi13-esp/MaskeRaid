@@ -11,13 +11,18 @@ public class BossContactDamage2D : MonoBehaviour
     {
         if (Time.time < lastHitTime + hitCooldown) return;
 
-        // Daño al PLAYER
+        // Daï¿½o al PLAYER
         if (other.CompareTag("Player"))
         {
+            PlayerDashController2D dashController = other.GetComponent<PlayerDashController2D>();
+            if (dashController != null && dashController.IsDashing)
+                return;
+
             PlayerHealth ph = other.GetComponent<PlayerHealth>();
             if (ph != null)
             {
-                ph.TakeDamage(damage);
+                Vector2 knockbackDir = (other.transform.position - transform.position).normalized;
+                ph.TakeDamage(damage, knockbackDir, 1f);
                 lastHitTime = Time.time;
             }
         }
