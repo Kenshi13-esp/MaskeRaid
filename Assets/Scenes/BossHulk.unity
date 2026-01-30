@@ -859,57 +859,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 557131592}
   m_CullTransparentMesh: 1
---- !u!1 &595474692 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-  m_PrefabInstance: {fileID: 2429795239990609307}
-  m_PrefabAsset: {fileID: 0}
---- !u!61 &595474699
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 595474692}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.44, y: 0.38}
-    newSize: {x: 0.37, y: 0.39}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
 --- !u!1 &672865532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,27 +1642,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 666505739e9ce504c96e1bf012ee544d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rounds:
-  - roundName: Round
-    bossPrefab: {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-    introDelay: 1
-    afterWinDelay: 3
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
+  bossPrefabs: []
+  introDelay: 1
+  afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
   player: {fileID: 0}
 --- !u!114 &1643664649
@@ -2244,6 +2175,7 @@ MonoBehaviour:
   sideForce: 18
   jumpHeight: 1.8
   postLandingInvincibility: 0.5
+  postDashInvincibilityFrames: 1
 --- !u!1 &1942714744
 GameObject:
   m_ObjectHideFlags: 0
@@ -2481,54 +2413,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: BossHulk
       objectReference: {fileID: 0}
-    - target: {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.pivot.x
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.pivot.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.newSize.x
-      value: 0.37
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.newSize.y
-      value: 0.39
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.oldSize.x
-      value: 0.44
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.oldSize.y
-      value: 0.38
-      objectReference: {fileID: 0}
-    - target: {fileID: 1657291582563994801, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_SpriteTilingProperty.adaptiveTilingThreshold
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2138132918296124874, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_Size.x
-      value: 0.37
-      objectReference: {fileID: 0}
-    - target: {fileID: 2138132918296124874, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_Size.y
-      value: 0.39
-      objectReference: {fileID: 0}
-    - target: {fileID: 2138132918296124874, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_Sprite
-      value: 
-      objectReference: {fileID: 7145198348311737387, guid: 84583bde2a0b6bb448e468cd734474d1, type: 3}
-    - target: {fileID: 2138132918296124874, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      propertyPath: m_WasSpriteAssigned
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3593699497187100314, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2572,10 +2456,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 595474699}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
 --- !u!1001 &3918630093096460624
 PrefabInstance:

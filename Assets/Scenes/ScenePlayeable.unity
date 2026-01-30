@@ -1016,7 +1016,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bossDamage: 1
-  enemyDamage: 999
 --- !u!1 &749832258
 GameObject:
   m_ObjectHideFlags: 0
@@ -1780,16 +1779,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ca9aeae8e3c8a7489758b8699ab35f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  totalWaves: 30
-  startEnemies: 2
-  addPerWave: 1
-  minSpawn: {x: -7, y: -4}
-  maxSpawn: {x: 7, y: 4}
-  enemyPrefab: {fileID: 3836464844837386065, guid: 05746dece13768849b74d9dd658460e1, type: 3}
-  enemyParent: {fileID: 0}
-  player: {fileID: 0}
-  currentWave: 0
-  aliveEnemies: 0
 --- !u!4 &1643664646
 Transform:
   m_ObjectHideFlags: 0
@@ -1817,27 +1806,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 666505739e9ce504c96e1bf012ee544d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rounds:
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 3
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
-  - roundName: Round
-    bossPrefab: {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
-    introDelay: 1
-    afterWinDelay: 1
+  bossPrefabs:
+  - {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
+  introDelay: 1
+  afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
   player: {fileID: 0}
 --- !u!114 &1643664649
@@ -2364,6 +2336,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 500
+  knockbackDuration: 0.5
+  sideForce: 18
+  jumpHeight: 1.8
+  postLandingInvincibility: 0.5
+  postDashInvincibilityTime: 0.15
 --- !u!1 &1942714744
 GameObject:
   m_ObjectHideFlags: 0
