@@ -12,12 +12,12 @@ public class BossJellyDingle2D : MonoBehaviour
     [Header("Dash Pattern")]
     [SerializeField] private float chargeUpTime = 0.6f;      // telegraph
     [SerializeField] private float dashSpeed = 16f;          // velocidad de embestida
-    [SerializeField] private float dashDuration = 0.9f;      // cuánto dura el “modo rebote”
+    [SerializeField] private float dashDuration = 0.9f;      // cuï¿½nto dura el ï¿½modo reboteï¿½
     [SerializeField] private float timeBetweenDashes = 0.7f; // descanso
 
     [Header("Bounces")]
     [SerializeField] private int maxBouncesBeforeStop = 6;   // rebotes por dash
-    [SerializeField] private float minSpeedAfterBounce = 12f;// para mantener energía
+    [SerializeField] private float minSpeedAfterBounce = 12f;// para mantener energï¿½a
     [SerializeField] private float maxSpeedClamp = 18f;      // para que no acelere infinito
 
     [Header("Walls")]
@@ -55,11 +55,11 @@ public class BossJellyDingle2D : MonoBehaviour
     {
         while (true)
         {
-            // 1) Preparación
+            // 1) Preparaciï¿½n
             state = State.ChargeUp;
             rb.linearVelocity = Vector2.zero;
 
-            // Aquí puedes activar animación “inflate/squash” si quieres
+            // Aquï¿½ puedes activar animaciï¿½n ï¿½inflate/squashï¿½ si quieres
             yield return new WaitForSeconds(chargeUpTime);
 
             // 2) Dash hacia el player
@@ -88,7 +88,7 @@ public class BossJellyDingle2D : MonoBehaviour
                 yield return null;
             }
 
-            // Si se quedó sin rebotes, se aturde un momento
+            // Si se quedï¿½ sin rebotes, se aturde un momento
             if (state == State.Stunned)
             {
                 rb.linearVelocity = Vector2.zero;
@@ -120,20 +120,20 @@ public class BossJellyDingle2D : MonoBehaviour
 
             bouncesLeft--;
 
-            // Refuerzo: mantener velocidad mínima para que se sienta “Dingle”
+            // Refuerzo: mantener velocidad mï¿½nima para que se sienta ï¿½Dingleï¿½
             float spd = rb.linearVelocity.magnitude;
             if (spd < minSpeedAfterBounce)
                 rb.linearVelocity = rb.linearVelocity.normalized * minSpeedAfterBounce;
 
             if (bouncesLeft <= 0)
             {
-                // Se “revienta” / se para y se aturde
+                // Se ï¿½revientaï¿½ / se para y se aturde
                 state = State.Stunned;
                 rb.linearVelocity = Vector2.zero;
             }
         }
 
-        // Daño por contacto al player (si choca)
+        // Daï¿½o por contacto al player (si choca)
         if (collision.collider.CompareTag("Player"))
         {
             TryDealDamageToPlayer(collision.collider);
@@ -151,11 +151,19 @@ public class BossJellyDingle2D : MonoBehaviour
     private void TryDealDamageToPlayer(Collider2D playerCol)
     {
         if (Time.time < lastHitTime + hitCooldown) return;
+
+        PlayerDashController2D dashController = playerCol.GetComponent<PlayerDashController2D>();
+        if (dashController != null && dashController.IsDashing)
+            return;
+
         lastHitTime = Time.time;
 
         PlayerHealth hp = playerCol.GetComponent<PlayerHealth>();
         if (hp != null)
-            hp.TakeDamage(contactDamage);
+        {
+            Vector2 knockbackDir = (playerCol.transform.position - transform.position).normalized;
+            hp.TakeDamage(contactDamage, knockbackDir, 1f);
+        }
     }
 }
 

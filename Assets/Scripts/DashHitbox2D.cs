@@ -5,8 +5,6 @@ public class DashHitbox2D : MonoBehaviour
 {
     [Header("Damage")]
     [SerializeField] private int bossDamage = 1;
-    [SerializeField] private int enemyDamage = 999;
-
     private bool active;
 
     // Guardamos IDs de targets golpeados DURANTE ESTE DASH
@@ -28,28 +26,15 @@ public class DashHitbox2D : MonoBehaviour
     {
         if (!active) return;
 
-        // ===== BOSS =====
         BossHealth boss = other.GetComponentInParent<BossHealth>();
         if (boss != null && !boss.IsDead)
         {
-            int bossId = boss.gameObject.GetInstanceID();   //  por boss, no por collider
-            if (hitThisDash.Contains(bossId)) return;        // 1 golpe por dash
+            int bossId = boss.gameObject.GetInstanceID();
+            if (hitThisDash.Contains(bossId)) return;
 
             hitThisDash.Add(bossId);
             boss.TakeDamage(bossDamage);
             Debug.Log($"DASH HIT BOSS (hp now?) dmg={bossDamage}");
-            return;
-        }
-
-        // ===== ENEMIGO NORMAL =====
-        EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
-        if (enemy != null)
-        {
-            int enemyId = enemy.gameObject.GetInstanceID();
-            if (hitThisDash.Contains(enemyId)) return;
-
-            hitThisDash.Add(enemyId);
-            enemy.TakeDamage(enemyDamage);
             return;
         }
     }

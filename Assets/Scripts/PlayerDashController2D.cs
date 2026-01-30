@@ -22,7 +22,7 @@ public class PlayerDashController2D : MonoBehaviour
 
     [Header("Dash Duration (lo importante)")]
     [Tooltip("Tiempo que dura el dash (segundos). Más bajo = más rápido.")]
-    [SerializeField] private float dashDuration = 0.10f; // prueba 0.08–0.12
+    [SerializeField] private float dashDuration = 0.10f;
 
     [Header("Dash Combo (exactly 2)")]
     [SerializeField] private int comboDashes = 2;
@@ -40,6 +40,7 @@ public class PlayerDashController2D : MonoBehaviour
     [SerializeField] private Transform dashVfxSpawnPoint;
 
     private Rigidbody2D rb;
+    private PlayerHealth playerHealth;
 
     private Vector2 moveInput;
     private Vector2 lastMoveDir = Vector2.right;
@@ -53,19 +54,20 @@ public class PlayerDashController2D : MonoBehaviour
     private int dashSerialCounter;
 
     private float defaultFixedDeltaTime;
+    private Coroutine cooldownCoroutine;
 
     public bool IsDashing => isDashing;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerHealth = GetComponent<PlayerHealth>();
         defaultFixedDeltaTime = Time.fixedDeltaTime;
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
-    // PlayerInput (Invoke Unity Events)
     public void OnMove(InputAction.CallbackContext ctx)
     {
         Vector2 v = ctx.ReadValue<Vector2>();
@@ -80,7 +82,6 @@ public class PlayerDashController2D : MonoBehaviour
         }
     }
 
-    // PlayerInput (Invoke Unity Events)
     public void OnDash(InputAction.CallbackContext ctx)
     {
         if (ctx.started || ctx.performed) StartCharge();
@@ -98,14 +99,13 @@ public class PlayerDashController2D : MonoBehaviour
 
     private void FixedUpdate()
     {
-        rb.linearVelocity = moveInput * moveSpeed;
+        if (playerHealth != null && playerHealth.IsLaunched)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
 
-        //if (!isDashing && !isCooldown)
-        //    rb.linearVelocity = moveInput * moveSpeed;
-        //else
-        //{
-        //    rb.linearVelocity = Vector2.zero;
-        //}
+        rb.linearVelocity = moveInput * moveSpeed;
     }
 
     private void UpdateFacing(Vector2 input)
@@ -126,6 +126,7 @@ public class PlayerDashController2D : MonoBehaviour
 
     private void StartCharge()
     {
+        if (playerHealth != null && playerHealth.IsLaunched) return;
         if (isDashing || isCooldown) return;
         if (isCharging) return;
         if (dashesUsed >= comboDashes) return;
@@ -144,7 +145,6 @@ public class PlayerDashController2D : MonoBehaviour
 
         isCharging = false;
 
-        // Salimos del slowmo justo al soltar
         Time.timeScale = 1f;
         Time.fixedDeltaTime = defaultFixedDeltaTime;
 
@@ -170,12 +170,10 @@ public class PlayerDashController2D : MonoBehaviour
         Vector2 startPos = rb.position;
         Vector2 target = startPos + dashDir * dashDistance;
 
-        // Recorte contra paredes
         RaycastHit2D hit = Physics2D.Raycast(startPos, dashDir, dashDistance, wallsMask);
         if (hit.collider != null)
             target = hit.point - dashDir * wallSkin;
 
-        // ✅ Aquí está el “punch”: recorremos en X segundos sí o sí
         float elapsed = 0f;
         float dur = Mathf.Max(0.01f, dashDuration);
 
@@ -199,7 +197,11 @@ public class PlayerDashController2D : MonoBehaviour
         dashesUsed++;
 
         if (dashesUsed >= comboDashes)
-            StartCoroutine(CooldownRoutine());
+        {
+            if (cooldownCoroutine != null)
+                StopCoroutine(cooldownCoroutine);
+            cooldownCoroutine = StartCoroutine(CooldownRoutine());
+        }
     }
 
     private IEnumerator CooldownRoutine()
@@ -207,15 +209,16 @@ public class PlayerDashController2D : MonoBehaviour
         isCooldown = true;
         rb.linearVelocity = Vector2.zero;
 
-        float t = 0f;
-        while(t <= dashCooldownAfterCombo)
+        float elapsed = 0f;
+        while(elapsed < dashCooldownAfterCombo)
         {
-            t += Time.deltaTime;
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
         dashesUsed = 0;
         isCooldown = false;
+        cooldownCoroutine = null;
     }
 
     private void SpawnDashVFX(Vector2 dashDir)
@@ -225,14 +228,31 @@ public class PlayerDashController2D : MonoBehaviour
         Vector3 spawnPos = dashVfxSpawnPoint.position;
         GameObject vfx = Instantiate(dashVfxPrefab, spawnPos, Quaternion.identity);
 
-        // Flip VFX igual que player
         SpriteRenderer vfxSR = vfx.GetComponentInChildren<SpriteRenderer>();
         if (vfxSR != null && spriteRenderer != null)
             vfxSR.flipX = spriteRenderer.flipX;
+    }
 
-        // Si quieres que el VFX “viaje”, tu DashVFXTravel2D puede seguir,
-        // pero aquí lo dejamos simple para que no afecte a la sensación.
+    public void EndDashState()
+    {
+        StopAllCoroutines();
+
+        if (dashHitbox != null)
+            dashHitbox.EndDash();
+
+        if (isCharging)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
+
+        isCharging = false;
+        isDashing = false;
+        rb.linearVelocity = Vector2.zero;
+
+        if (isCooldown && cooldownCoroutine != null)
+        {
+            cooldownCoroutine = StartCoroutine(CooldownRoutine());
+        }
     }
 }
-
-
