@@ -1,19 +1,15 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BossRushManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class Round
-    {
-        public string roundName = "Round";
-        public GameObject bossPrefab;
-        public float introDelay = 1f;   // espera antes de spawnear
-        public float afterWinDelay = 1f; // espera tras matar boss
-    }
+    [Header("Boss Pool")]
+    [SerializeField] private List<GameObject> bossPrefabs = new List<GameObject>();
 
-    [Header("Boss Rush (5 rounds)")]
-    [SerializeField] private Round[] rounds = new Round[5];
+    [Header("Rush Settings")]
+    [SerializeField] private float introDelay = 1f;
+    [SerializeField] private float afterWinDelay = 1f;
 
     [Header("Spawn")]
     [SerializeField] private Transform bossSpawnPoint;
@@ -21,9 +17,11 @@ public class BossRushManager : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Transform player;
 
-    private int currentRoundIndex = -1;
+    private int currentRoundIndex = 0;
+    private int totalBossesDefeated = 0;
     private BossHealth currentBossHealth;
     private GameObject currentBossInstance;
+    private List<int> availableBossIndices = new List<int>();
 
     private void Awake()
     {
@@ -42,73 +40,108 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        if (rounds == null || rounds.Length != 5)
+        if (bossPrefabs == null || bossPrefabs.Count == 0)
         {
-            Debug.LogError("[BossRushManager] rounds debe tener EXACTAMENTE 5 elementos.");
+            Debug.LogError("[BossRushManager] bossPrefabs est√° vac√≠o. Agrega prefabs de bosses a la lista.");
             return;
         }
 
+        InitializeBossPool();
         StartCoroutine(RunBossRush());
+    }
+
+    private void InitializeBossPool()
+    {
+        availableBossIndices.Clear();
+        for (int i = 0; i < bossPrefabs.Count; i++)
+        {
+            if (bossPrefabs[i] != null)
+            {
+                availableBossIndices.Add(i);
+            }
+        }
     }
 
     private IEnumerator RunBossRush()
     {
-        for (int i = 0; i < rounds.Length; i++)
+        while (true)
         {
-            currentRoundIndex = i;
+            currentRoundIndex++;
 
-            Round r = rounds[i];
-            if (r.bossPrefab == null)
+            if (availableBossIndices.Count == 0)
             {
-                Debug.LogError($"[BossRushManager] Round {i + 1} no tiene bossPrefab asignado.");
-                yield break;
+                Debug.Log($"=== CICLO COMPLETADO: Todos los {bossPrefabs.Count} bosses derrotados. Reiniciando pool... ===");
+                InitializeBossPool();
             }
 
-            Debug.Log($"=== RONDA {i + 1}/5: {r.roundName} ===");
+            int randomIndex = Random.Range(0, availableBossIndices.Count);
+            int bossIndex = availableBossIndices[randomIndex];
+            availableBossIndices.RemoveAt(randomIndex);
 
-            yield return new WaitForSeconds(r.introDelay);
+            GameObject bossPrefab = bossPrefabs[bossIndex];
 
-            SpawnBoss(r.bossPrefab);
+            if (bossPrefab == null)
+            {
+                Debug.LogError($"[BossRushManager] Boss en √≠ndice {bossIndex} es null.");
+                continue;
+            }
 
-            // Esperar a que el boss muera
+            string bossName = bossPrefab.name;
+            Debug.Log($"=== RONDA {currentRoundIndex}: {bossName} ({totalBossesDefeated + 1} total) ===");
+
+            yield return new WaitForSeconds(introDelay);
+
+            SpawnBoss(bossPrefab);
+
             while (currentBossHealth != null && !currentBossHealth.IsDead)
+            {
                 yield return null;
+            }
 
-            Debug.Log($"+++ Boss derrotado: {r.roundName} +++");
+            totalBossesDefeated++;
+            Debug.Log($"+++ Boss derrotado: {bossName} (Total: {totalBossesDefeated}) +++");
 
-            // limpiar instancia por si acaso
             if (currentBossInstance != null)
+            {
                 Destroy(currentBossInstance);
+            }
 
-            yield return new WaitForSeconds(r.afterWinDelay);
+            yield return new WaitForSeconds(afterWinDelay);
         }
-
-        Debug.Log("VICTORIA: Boss Rush completado (5/5).");
     }
 
     private void SpawnBoss(GameObject bossPrefab)
     {
         if (currentBossInstance != null)
+        {
             Destroy(currentBossInstance);
+        }
 
         currentBossInstance = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
 
         currentBossHealth = currentBossInstance.GetComponent<BossHealth>();
         if (currentBossHealth == null)
         {
-            Debug.LogError("[BossRushManager] El bossPrefab NO tiene BossHealth. AÒ·delo al prefab.");
+            Debug.LogError("[BossRushManager] El bossPrefab NO tiene BossHealth. A√±√°delo al prefab.");
             return;
         }
 
-        // Conectar target al player si el boss lo necesita
-        var dingle = currentBossInstance.GetComponent<BossJellyDingle2D>();
-        if (dingle != null && player != null)
-        {
-            // el boss ya busca player por tag, pero si quieres forzarlo:
-            // dingle.SetTarget(player);  (si aÒadimos SetTarget en ese script)
-        }
+        currentBossHealth.ResetHealth();
 
-        currentBossHealth.ResetHealth(); // por si es un prefab reutilizado
+        ActivateBoss(currentBossInstance);
+    }
+
+    private void ActivateBoss(GameObject bossInstance)
+    {
+        var bossController = bossInstance.GetComponent<IBossController>();
+        if (bossController != null)
+        {
+            bossController.ActivateBoss();
+        }
+        else
+        {
+            Debug.LogWarning($"[BossRushManager] El boss '{bossInstance.name}' no implementa IBossController.");
+        }
     }
 }
 

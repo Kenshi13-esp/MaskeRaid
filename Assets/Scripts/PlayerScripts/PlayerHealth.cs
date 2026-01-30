@@ -9,6 +9,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float sideForce = 18f;
     [SerializeField] private float jumpHeight = 1.8f;
     [SerializeField] private float postLandingInvincibility = 0.5f;
+    [SerializeField] private float postDashInvincibilityFrames = 1f;
 
     private int hp;
     private Rigidbody2D rb;
@@ -98,6 +99,24 @@ public class PlayerHealth : MonoBehaviour
         }
 
         if (spriteRenderer != null) spriteRenderer.enabled = true;
+        isInvincible = false;
+    }
+
+    public void GrantPostDashInvincibility()
+    {
+        if (isLaunched) return;
+        StartCoroutine(PostDashInvincibilityRoutine());
+    }
+
+    private IEnumerator PostDashInvincibilityRoutine()
+    {
+        isInvincible = true;
+        
+        for (int i = 0; i < postDashInvincibilityFrames; i++)
+        {
+            yield return null;
+        }
+        
         isInvincible = false;
     }
 }

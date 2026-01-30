@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class BossJellyDingle2D : MonoBehaviour
+public class BossJellyDingle2D : MonoBehaviour, IBossController
 {
     public enum State { Idle, ChargeUp, Dashing, Stunned }
 
@@ -34,6 +34,7 @@ public class BossJellyDingle2D : MonoBehaviour
     private State state = State.Idle;
     private int bouncesLeft;
     private float lastHitTime;
+    private bool isActive = false;
 
     private void Awake()
     {
@@ -46,14 +47,18 @@ public class BossJellyDingle2D : MonoBehaviour
         }
     }
 
-    private void Start()
+    public void ActivateBoss()
     {
-        StartCoroutine(BossLoop());
+        if (!isActive)
+        {
+            isActive = true;
+            StartCoroutine(BossLoop());
+        }
     }
 
     private IEnumerator BossLoop()
     {
-        while (true)
+        while (isActive)
         {
             // 1) Preparaci�n
             state = State.ChargeUp;
