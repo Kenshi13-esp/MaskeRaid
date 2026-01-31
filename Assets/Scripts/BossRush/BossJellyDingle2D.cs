@@ -30,6 +30,10 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     [SerializeField] private int contactDamage = 1;
     [SerializeField] private float hitCooldown = 0.35f;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [SerializeField] private float transformAnimationWaitTime = 0.5f;
+
     private Rigidbody2D rb;
     private State state = State.Idle;
     private int bouncesLeft;
@@ -40,6 +44,15 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+        }
 
         if (player == null)
         {
@@ -84,14 +97,32 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     {
         while (isActive)
         {
-            // 1) Preparaci�n
-            state = State.ChargeUp;
+            // 1) Idle
+            state = State.Idle;
             rb.linearVelocity = Vector2.zero;
+            
+            if (animator != null)
+            {
+                animator.SetTrigger("Idle");
+            }
 
-            // Aqu� puedes activar animaci�n �inflate/squash� si quieres
-            yield return new WaitForSeconds(chargeUpTime);
+            // 2) Transform (animacion de transformarse antes de rodar)
+            state = State.ChargeUp;
+            
+            if (animator != null)
+            {
+                animator.SetTrigger("Transform");
+            }
 
-            // 2) Dash hacia el player
+            // Esperar durante la animacion de transformacion
+            yield return new WaitForSeconds(chargeUpTime + transformAnimationWaitTime);
+
+            // 3) Roll - Dash hacia el player
+            if (animator != null)
+            {
+                animator.SetTrigger("Roll");
+            }
+
             if (player != null)
             {
                 Vector2 dir = ((Vector2)player.position - rb.position).normalized;
@@ -99,17 +130,15 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             }
             else
             {
-                // si no hay player, dash random
                 StartDash(Random.insideUnitCircle.normalized);
             }
 
-            // 3) Mantener dash durante X tiempo (con rebotes)
+            // 4) Mantener dash durante X tiempo (con rebotes)
             float t = 0f;
             while (t < dashDuration && state == State.Dashing)
             {
                 t += Time.deltaTime;
 
-                // Clamp velocidad para no explotar
                 float spd = rb.linearVelocity.magnitude;
                 if (spd > maxSpeedClamp)
                     rb.linearVelocity = rb.linearVelocity.normalized * maxSpeedClamp;
@@ -117,16 +146,19 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
                 yield return null;
             }
 
-            // Si se qued� sin rebotes, se aturde un momento
+            // 5) Si se quedo sin rebotes, se aturde
             if (state == State.Stunned)
             {
+                if (animator != null)
+                {
+                    animator.SetTrigger("Stunned");
+                }
+
                 rb.linearVelocity = Vector2.zero;
                 yield return new WaitForSeconds(stunTime);
             }
 
-            // 4) Pausa
-            state = State.Idle;
-            rb.linearVelocity = Vector2.zero;
+            // 6) Pausa entre ataques
             yield return new WaitForSeconds(timeBetweenDashes);
         }
     }
