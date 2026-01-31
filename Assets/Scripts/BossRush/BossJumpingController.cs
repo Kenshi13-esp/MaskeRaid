@@ -6,27 +6,27 @@ using UnityEngine;
 public class BossJumpingController : MonoBehaviour, IBossController
 {
     [Header("Movement Settings")]
-    [SerializeField] private float jumpDuration = 1.2f;
-    [SerializeField] private float dashSpeed = 25f;
-    [SerializeField] private float idleTimeBetweenAttacks = 1.2f;
-    [SerializeField] private float timeBetweenPatterns = 1.5f;
+    [SerializeField] private float jumpDuration = 1.6f;
+    [SerializeField] private float dashSpeed = 18f;
+    [SerializeField] private float idleTimeBetweenAttacks = 3.5f;
+    [SerializeField] private float timeBetweenPatterns = 4.0f;
 
     [Header("Jump Settings")]
     [SerializeField] private int jumpsPhaseOne = 3;
     [SerializeField] private int jumpsPhaseTwo = 5;
-    [SerializeField] private float offScreenHeight = 15f;
+    [SerializeField] private float offScreenHeight = 30f;
     [SerializeField] private float shadowMoveDelay = 0.15f;
+    [SerializeField] private float prejumpDelay = 0.8f;
 
     [Header("Dash Settings")]
     [SerializeField] private int dashesPhaseOne = 1;
     [SerializeField] private int dashesPhaseTwo = 3;
-    [SerializeField] private float dashExtraDistance = 5f;
+    [SerializeField] private float repositionSpeed = 8f;
+    [SerializeField] private float repositionThreshold = 0.5f;
 
     [Header("Impact & Damage")]
     [SerializeField] private int areaDamage = 2;
-    [SerializeField] private int contactDamage = 1;
     [SerializeField] private float areaRadius = 3.8f;
-    [SerializeField] private float contactForce = 8f;
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     [SerializeField] private GameObject impactVFXPrefab;
@@ -38,6 +38,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
     [Header("Shadow")]
     [SerializeField] private GameObject shadowPrefab;
+    [SerializeField] private string shadowMarkerName = "Quetza_Shadow";
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
@@ -49,14 +50,17 @@ public class BossJumpingController : MonoBehaviour, IBossController
     private Color originalColor;
     private GameObject shadowInstance;
     private SpriteRenderer shadowRenderer;
+    private Transform shadowMarker;
+    private Vector2 shadowMarkerLocalOffset;
+    private Vector2 shadowStartPos;
+    private Vector2 shadowEndPos;
 
     private bool isPhaseTwo = false;
     private bool isInAir = false;
-    private bool isDashingBoss = false;
     private float speedMultiplier = 1f;
     private bool isActive = false;
-    private float lastContactDamageTime;
-    private const float CONTACT_DAMAGE_COOLDOWN = 0.5f;
+
+    public bool IsInAir => isInAir;
 
     private void Awake()
     {
@@ -65,6 +69,12 @@ public class BossJumpingController : MonoBehaviour, IBossController
         rb.freezeRotation = true;
 
         bossHealth = GetComponent<BossHealth>();
+        
+        shadowMarker = transform.Find(shadowMarkerName);
+        if (shadowMarker == null)
+        {
+            Debug.LogWarning($"No se encontró el hijo '{shadowMarkerName}' que marca la posición de la sombra.");
+        }
 
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer != null)
@@ -79,48 +89,50 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
-
-        CreateShadow();
     }
 
-    private void CreateShadow()
+    private void CreateShadow(Vector2 bossStartPos, Vector2 bossTargetPos)
     {
         if (shadowPrefab != null)
         {
-            shadowInstance = Instantiate(shadowPrefab, transform.position, Quaternion.identity);
+            if (shadowMarker != null)
+            {
+                shadowMarkerLocalOffset = shadowMarker.localPosition;
+            }
+            else
+            {
+                shadowMarkerLocalOffset = Vector2.zero;
+            }
+            
+            shadowStartPos = bossStartPos + shadowMarkerLocalOffset;
+            shadowEndPos = bossTargetPos + shadowMarkerLocalOffset;
+            
+            shadowInstance = Instantiate(shadowPrefab, shadowStartPos, Quaternion.identity);
             shadowRenderer = shadowInstance.GetComponent<SpriteRenderer>();
         }
-        else if (spriteRenderer != null)
+        else
         {
-            shadowInstance = new GameObject("Shadow");
-            shadowRenderer = shadowInstance.AddComponent<SpriteRenderer>();
-            shadowRenderer.sprite = spriteRenderer.sprite;
-            shadowRenderer.color = new Color(0, 0, 0, 0.4f);
-            shadowRenderer.sortingLayerName = spriteRenderer.sortingLayerName;
-            shadowRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
+            Debug.LogWarning("No se ha asignado el shadowPrefab en el Inspector.");
         }
+    }
 
+    private void DestroyShadow()
+    {
         if (shadowInstance != null)
         {
-            shadowInstance.transform.localScale = transform.localScale * 0.8f;
-            shadowInstance.transform.position = transform.position;
+            Destroy(shadowInstance);
+            shadowInstance = null;
+            shadowRenderer = null;
         }
     }
 
     private void LateUpdate()
     {
-        if (shadowInstance != null && !isInAir)
-        {
-            shadowInstance.transform.position = transform.position;
-        }
     }
 
     private void OnDestroy()
     {
-        if (shadowInstance != null)
-        {
-            Destroy(shadowInstance);
-        }
+        DestroyShadow();
     }
 
     public void ActivateBoss()
@@ -175,49 +187,33 @@ public class BossJumpingController : MonoBehaviour, IBossController
         }
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (bossHealth.IsDead || isInAir) return;
-
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            PlayerHealth ph = collision.gameObject.GetComponent<PlayerHealth>();
-            PlayerDashController2D pDash = collision.gameObject.GetComponent<PlayerDashController2D>();
-            if (ph == null) return;
-
-            if (Time.time < lastContactDamageTime + CONTACT_DAMAGE_COOLDOWN) return;
-
-            if (pDash != null && pDash.IsDashing)
-            {
-                if (isDashingBoss)
-                {
-                    pDash.EndDashState();
-                    Vector2 dir = (collision.transform.position - transform.position).normalized;
-                    ph.TakeDamage(areaDamage, dir, 1f);
-                    lastContactDamageTime = Time.time;
-                }
-                return;
-            }
-
-            Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
-            int damage = isDashingBoss ? areaDamage : contactDamage;
-            float force = isDashingBoss ? 1f : contactForce;
-            ph.TakeDamage(damage, knockbackDir, force);
-            lastContactDamageTime = Time.time;
-        }
-    }
-
     private IEnumerator JumpRoutine()
     {
         if (player == null || bossHealth.IsDead) yield break;
+
+        rb.WakeUp();
+        
+        if (animator != null)
+        {
+            animator.SetTrigger("Prejump");
+        }
+
+        yield return new WaitForSeconds(prejumpDelay / speedMultiplier);
 
         Vector2 currentPos = rb.position;
         Vector2 offScreenPosStart = new Vector2(currentPos.x, currentPos.y + offScreenHeight);
         Vector2 targetLandingPos = ClampToArena(player.position);
         Vector2 offScreenPosEnd = new Vector2(targetLandingPos.x, targetLandingPos.y + offScreenHeight);
 
+        CreateShadow(currentPos, targetLandingPos);
+
         isInAir = true;
-        Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), true);
+                
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider != null)
+        {
+            myCollider.enabled = false;
+        }
 
         if (animator != null)
         {
@@ -233,13 +229,6 @@ public class BossJumpingController : MonoBehaviour, IBossController
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
             rb.MovePosition(Vector2.Lerp(currentPos, offScreenPosStart, t));
-            
-            if (spriteRenderer != null)
-            {
-                Color c = spriteRenderer.color;
-                c.a = Mathf.Lerp(1f, 0f, t);
-                spriteRenderer.color = c;
-            }
 
             yield return null;
         }
@@ -259,7 +248,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
             
             if (shadowInstance != null)
             {
-                shadowInstance.transform.position = Vector2.Lerp(currentPos, targetLandingPos, t);
+                shadowInstance.transform.position = Vector2.Lerp(shadowStartPos, shadowEndPos, t);
             }
 
             yield return null;
@@ -278,35 +267,27 @@ public class BossJumpingController : MonoBehaviour, IBossController
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
             rb.MovePosition(Vector2.Lerp(offScreenPosEnd, targetLandingPos, t));
-            
-            if (spriteRenderer != null)
-            {
-                Color c = spriteRenderer.color;
-                c.a = Mathf.Lerp(0f, 1f, t);
-                spriteRenderer.color = c;
-            }
 
             yield return null;
         }
 
         rb.MovePosition(targetLandingPos);
 
-        if (spriteRenderer != null)
+        if (myCollider != null)
         {
-            Color c = isPhaseTwo ? phaseTwoColor : originalColor;
-            c.a = 1f;
-            spriteRenderer.color = c;
+            myCollider.enabled = true;
         }
 
-        Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), false);
         isInAir = false;
+        
+        DestroyShadow();
 
         if (animator != null)
         {
-            animator.SetTrigger("Idle");
+            animator.SetTrigger("Stand");
         }
 
-        ExecuteImpact();
+        ExecuteImpact(shadowEndPos);
     }
 
     private Vector2 ClampToArena(Vector2 targetPos)
@@ -347,22 +328,79 @@ public class BossJumpingController : MonoBehaviour, IBossController
         return targetPos;
     }
 
+    private IEnumerator RepositionToPlayerY()
+    {
+        if (player == null || bossHealth.IsDead) yield break;
+
+        Vector2 currentPos = rb.position;
+        float initialTargetY = player.position.y;
+        float distanceY = Mathf.Abs(initialTargetY - currentPos.y);
+
+        if (distanceY < repositionThreshold)
+        {
+            yield break;
+        }
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Reposition");
+        }
+
+        Vector2 startPos = currentPos;
+        float startY = currentPos.y;
+        float duration = distanceY / (repositionSpeed * speedMultiplier);
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            if (bossHealth.IsDead) yield break;
+            
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            float currentTargetY = player.position.y;
+            float interpolatedY = Mathf.Lerp(startY, currentTargetY, t);
+            
+            Vector2 newPos = new Vector2(currentPos.x, interpolatedY);
+            rb.MovePosition(newPos);
+            
+            yield return new WaitForFixedUpdate();
+        }
+
+        Vector2 finalPos = new Vector2(currentPos.x, player.position.y);
+        rb.MovePosition(finalPos);
+        
+        if (animator != null)
+        {
+            animator.SetTrigger("Stand");
+        }
+    }
+
     private IEnumerator DashRoutine()
     {
         if (player == null || bossHealth.IsDead) yield break;
 
-        isDashingBoss = true;
+        yield return StartCoroutine(RepositionToPlayerY());
+
+        if (bossHealth.IsDead) yield break;
+
+        rb.WakeUp();
+
+        Vector2 dashStartPos = rb.position;
+        
+        float horizontalDirection = Mathf.Sign(player.position.x - dashStartPos.x);
+        if (Mathf.Abs(horizontalDirection) < 0.01f)
+        {
+            horizontalDirection = 1f;
+        }
+        
+        Vector2 dashDirection = new Vector2(horizontalDirection, 0f).normalized;
+        FaceDirection(dashDirection);
 
         if (animator != null)
         {
             animator.SetTrigger("Dash");
         }
-
-        Vector2 startPos = rb.position;
-        Vector2 playerPos = new Vector2(player.position.x, player.position.y);
-        Vector2 directionToPlayer = (playerPos - startPos).normalized;
-        
-        Vector2 rawTargetPos = playerPos + directionToPlayer * dashExtraDistance;
 
         Collider2D myCollider = GetComponent<Collider2D>();
         float colliderRadius = 0.5f;
@@ -378,72 +416,99 @@ public class BossJumpingController : MonoBehaviour, IBossController
             }
         }
 
-        float safeDistance = colliderRadius + 0.5f;
-        Vector2 targetPos = ClampToArena(rawTargetPos);
-        Vector2 dashDirection = (targetPos - startPos).normalized;
-        float maxDashDistance = Vector2.Distance(startPos, targetPos);
-
-        RaycastHit2D[] allHits = Physics2D.RaycastAll(startPos, dashDirection, maxDashDistance, obstacleLayer);
-        if (allHits.Length > 0)
+        float maxRayDistance = 100f;
+        RaycastHit2D wallHit = Physics2D.Raycast(dashStartPos, dashDirection, maxRayDistance, obstacleLayer);
+        
+        if (wallHit.collider == null)
         {
-            float closestDistance = maxDashDistance;
-            foreach (RaycastHit2D h in allHits)
+            if (animator != null)
             {
-                float dist = Vector2.Distance(startPos, h.point);
-                if (dist < closestDistance && dist > 0.1f)
-                {
-                    closestDistance = dist;
-                    targetPos = h.point - dashDirection * safeDistance;
-                }
+                animator.SetTrigger("Stand");
             }
-        }
-
-        targetPos = ClampToArena(targetPos);
-        float finalDistance = Vector2.Distance(startPos, targetPos);
-
-        if (finalDistance < 0.5f)
-        {
-            isDashingBoss = false;
             yield break;
         }
 
-        float duration = finalDistance / (dashSpeed * speedMultiplier);
-        float elapsed = 0f;
+        float safeDistance = colliderRadius + 0.5f;
+        Vector2 targetPos = wallHit.point - dashDirection * safeDistance;
+        float totalDistance = Vector2.Distance(dashStartPos, targetPos);
 
-        while (elapsed < duration)
+        if (totalDistance < 0.5f)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            Vector2 nextPos = Vector2.Lerp(startPos, targetPos, t);
+            if (animator != null)
+            {
+                animator.SetTrigger("Stand");
+            }
+            yield break;
+        }
+
+        bool hitWall = false;
+
+        while (!hitWall)
+        {
+            if (bossHealth.IsDead) 
+            {
+                yield break;
+            }
             
-            Collider2D obstacleHit = Physics2D.OverlapCircle(nextPos, colliderRadius, obstacleLayer);
+            Vector2 nextPos = rb.position + dashDirection * dashSpeed * speedMultiplier * Time.fixedDeltaTime;
+            
+            RaycastHit2D immediateWallCheck = Physics2D.Raycast(rb.position, dashDirection, colliderRadius + 0.5f, obstacleLayer);
+            if (immediateWallCheck.collider != null)
+            {
+                hitWall = true;
+                break;
+            }
+            
+            Collider2D obstacleHit = Physics2D.OverlapCircle(nextPos, colliderRadius * 0.9f, obstacleLayer);
             if (obstacleHit != null)
             {
-                Vector2 directionFromObstacle = (rb.position - (Vector2)obstacleHit.transform.position).normalized;
-                rb.MovePosition(rb.position + directionFromObstacle * 0.1f);
+                hitWall = true;
+                break;
+            }
+            
+            if (Vector2.Distance(dashStartPos, nextPos) >= totalDistance)
+            {
+                rb.MovePosition(targetPos);
+                hitWall = true;
                 break;
             }
             
             rb.MovePosition(nextPos);
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
-
-        isDashingBoss = false;
 
         if (animator != null)
         {
-            animator.SetTrigger("Idle");
+            animator.SetTrigger("Stand");
         }
     }
 
-    private void ExecuteImpact()
+    private void FaceDirection(Vector2 direction)
     {
+        if (Mathf.Abs(direction.x) > 0.01f)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = direction.x > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+            transform.localScale = scale;
+        }
+    }
+
+    private void ExecuteImpact(Vector2 targetPos)
+    {
+        Vector2 impactPosition = targetPos;
+        
         if (impactVFXPrefab != null)
         {
-            Instantiate(impactVFXPrefab, transform.position, Quaternion.identity);
+            GameObject impactVFX = Instantiate(impactVFXPrefab, targetPos, Quaternion.identity);
+            
+            Animator impactAnimator = impactVFX.GetComponent<Animator>();
+            if (impactAnimator != null)
+            {
+                impactAnimator.SetTrigger("End");
+            }
         }
         
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, areaRadius, playerLayer);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(impactPosition, areaRadius, playerLayer);
         foreach (Collider2D h in hits)
         {
             PlayerHealth ph = h.GetComponent<PlayerHealth>();
@@ -456,7 +521,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
             if (ph != null)
             {
-                Vector2 knockbackDir = (h.transform.position - transform.position).normalized;
+                Vector2 knockbackDir = ((Vector2)h.transform.position - impactPosition).normalized;
                 if (knockbackDir.sqrMagnitude < 0.01f)
                 {
                     knockbackDir = Vector2.right;
@@ -468,8 +533,15 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
     private void OnDrawGizmosSelected()
     {
+        Vector3 impactPosition = transform.position;
+        
+        if (shadowMarker != null)
+        {
+            impactPosition = shadowMarker.position;
+        }
+        
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, areaRadius);
+        Gizmos.DrawWireSphere(impactPosition, areaRadius);
         
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position + Vector3.up * offScreenHeight, 1f);
