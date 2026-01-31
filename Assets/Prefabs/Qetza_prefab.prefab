@@ -235,6 +235,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 10
+  dashAbilityReward: {fileID: 0}
+  OnBossDeath:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &-1773285620604445359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -260,7 +264,7 @@ MonoBehaviour:
   dashesPhaseTwo: 3
   repositionSpeed: 8
   repositionThreshold: 0.1
-  areaDamage: 2
+  areaDamage: 200
   areaRadius: 3.8
   playerLayer:
     serializedVersion: 2
@@ -287,7 +291,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dc0c2454eabad7409b8f9fdb3416c41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 2
+  damage: 200
   knockbackForce: 10
   damageCooldown: 0.4
   playerLayer:
