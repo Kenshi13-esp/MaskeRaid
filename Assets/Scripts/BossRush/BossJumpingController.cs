@@ -6,16 +6,17 @@ using UnityEngine;
 public class BossJumpingController : MonoBehaviour, IBossController
 {
     [Header("Movement Settings")]
-    [SerializeField] private float jumpDuration = 1.2f;
-    [SerializeField] private float dashSpeed = 25f;
-    [SerializeField] private float idleTimeBetweenAttacks = 1.2f;
-    [SerializeField] private float timeBetweenPatterns = 1.5f;
+    [SerializeField] private float jumpDuration = 1.6f;
+    [SerializeField] private float dashSpeed = 18f;
+    [SerializeField] private float idleTimeBetweenAttacks = 3.5f;
+    [SerializeField] private float timeBetweenPatterns = 4.0f;
 
     [Header("Jump Settings")]
     [SerializeField] private int jumpsPhaseOne = 3;
     [SerializeField] private int jumpsPhaseTwo = 5;
-    [SerializeField] private float offScreenHeight = 15f;
+    [SerializeField] private float offScreenHeight = 30f;
     [SerializeField] private float shadowMoveDelay = 0.15f;
+    [SerializeField] private float prejumpDelay = 0.8f;
 
     [Header("Dash Settings")]
     [SerializeField] private int dashesPhaseOne = 1;
@@ -103,7 +104,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (shadowInstance != null)
         {
             shadowInstance.transform.localScale = transform.localScale * 0.8f;
-            shadowInstance.transform.position = transform.position;
+            shadowInstance.transform.position = rb.position;
         }
     }
 
@@ -111,7 +112,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
     {
         if (shadowInstance != null && !isInAir)
         {
-            shadowInstance.transform.position = transform.position;
+            shadowInstance.transform.position = rb.position;
         }
     }
 
@@ -211,13 +212,27 @@ public class BossJumpingController : MonoBehaviour, IBossController
     {
         if (player == null || bossHealth.IsDead) yield break;
 
+        rb.WakeUp();
+        
+        if (animator != null)
+        {
+            animator.SetTrigger("Prejump");
+        }
+
+        yield return new WaitForSeconds(prejumpDelay / speedMultiplier);
+
         Vector2 currentPos = rb.position;
         Vector2 offScreenPosStart = new Vector2(currentPos.x, currentPos.y + offScreenHeight);
         Vector2 targetLandingPos = ClampToArena(player.position);
         Vector2 offScreenPosEnd = new Vector2(targetLandingPos.x, targetLandingPos.y + offScreenHeight);
 
         isInAir = true;
-        Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), true);
+        
+        Collider2D myCollider = GetComponent<Collider2D>();
+        if (myCollider != null)
+        {
+            myCollider.enabled = false;
+        }
 
         if (animator != null)
         {
@@ -233,13 +248,6 @@ public class BossJumpingController : MonoBehaviour, IBossController
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
             rb.MovePosition(Vector2.Lerp(currentPos, offScreenPosStart, t));
-            
-            if (spriteRenderer != null)
-            {
-                Color c = spriteRenderer.color;
-                c.a = Mathf.Lerp(1f, 0f, t);
-                spriteRenderer.color = c;
-            }
 
             yield return null;
         }
@@ -278,32 +286,22 @@ public class BossJumpingController : MonoBehaviour, IBossController
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
             rb.MovePosition(Vector2.Lerp(offScreenPosEnd, targetLandingPos, t));
-            
-            if (spriteRenderer != null)
-            {
-                Color c = spriteRenderer.color;
-                c.a = Mathf.Lerp(0f, 1f, t);
-                spriteRenderer.color = c;
-            }
 
             yield return null;
         }
 
         rb.MovePosition(targetLandingPos);
 
-        if (spriteRenderer != null)
+        if (myCollider != null)
         {
-            Color c = isPhaseTwo ? phaseTwoColor : originalColor;
-            c.a = 1f;
-            spriteRenderer.color = c;
+            myCollider.enabled = true;
         }
 
-        Physics2D.IgnoreLayerCollision(gameObject.layer, LayerMask.NameToLayer("Player"), false);
         isInAir = false;
 
         if (animator != null)
         {
-            animator.SetTrigger("Idle");
+            animator.SetTrigger("Stand");
         }
 
         ExecuteImpact();
@@ -352,15 +350,18 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (player == null || bossHealth.IsDead) yield break;
 
         isDashingBoss = true;
+        rb.WakeUp();
+
+        Vector2 startPos = rb.position;
+        Vector2 playerPos = new Vector2(player.position.x, player.position.y);
+        Vector2 directionToPlayer = (playerPos - startPos).normalized;
+        
+        FaceDirection(directionToPlayer);
 
         if (animator != null)
         {
             animator.SetTrigger("Dash");
         }
-
-        Vector2 startPos = rb.position;
-        Vector2 playerPos = new Vector2(player.position.x, player.position.y);
-        Vector2 directionToPlayer = (playerPos - startPos).normalized;
         
         Vector2 rawTargetPos = playerPos + directionToPlayer * dashExtraDistance;
 
@@ -379,23 +380,16 @@ public class BossJumpingController : MonoBehaviour, IBossController
         }
 
         float safeDistance = colliderRadius + 0.5f;
-        Vector2 targetPos = ClampToArena(rawTargetPos);
-        Vector2 dashDirection = (targetPos - startPos).normalized;
-        float maxDashDistance = Vector2.Distance(startPos, targetPos);
+        Vector2 dashDirection = directionToPlayer;
+        float maxDashDistance = Vector2.Distance(startPos, rawTargetPos);
 
-        RaycastHit2D[] allHits = Physics2D.RaycastAll(startPos, dashDirection, maxDashDistance, obstacleLayer);
-        if (allHits.Length > 0)
+        RaycastHit2D wallHit = Physics2D.Raycast(startPos, dashDirection, maxDashDistance, obstacleLayer);
+        Vector2 targetPos = rawTargetPos;
+        
+        if (wallHit.collider != null)
         {
-            float closestDistance = maxDashDistance;
-            foreach (RaycastHit2D h in allHits)
-            {
-                float dist = Vector2.Distance(startPos, h.point);
-                if (dist < closestDistance && dist > 0.1f)
-                {
-                    closestDistance = dist;
-                    targetPos = h.point - dashDirection * safeDistance;
-                }
-            }
+            targetPos = wallHit.point - dashDirection * safeDistance;
+            maxDashDistance = Vector2.Distance(startPos, targetPos);
         }
 
         targetPos = ClampToArena(targetPos);
@@ -404,23 +398,36 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (finalDistance < 0.5f)
         {
             isDashingBoss = false;
+            
+            if (animator != null)
+            {
+                animator.SetTrigger("Idle");
+            }
+            
             yield break;
         }
 
         float duration = finalDistance / (dashSpeed * speedMultiplier);
         float elapsed = 0f;
+        bool hitWall = false;
 
-        while (elapsed < duration)
+        while (elapsed < duration && !hitWall)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             Vector2 nextPos = Vector2.Lerp(startPos, targetPos, t);
             
-            Collider2D obstacleHit = Physics2D.OverlapCircle(nextPos, colliderRadius, obstacleLayer);
+            RaycastHit2D immediateWallCheck = Physics2D.Raycast(rb.position, dashDirection, colliderRadius * 2f, obstacleLayer);
+            if (immediateWallCheck.collider != null)
+            {
+                hitWall = true;
+                break;
+            }
+            
+            Collider2D obstacleHit = Physics2D.OverlapCircle(nextPos, colliderRadius * 0.9f, obstacleLayer);
             if (obstacleHit != null)
             {
-                Vector2 directionFromObstacle = (rb.position - (Vector2)obstacleHit.transform.position).normalized;
-                rb.MovePosition(rb.position + directionFromObstacle * 0.1f);
+                hitWall = true;
                 break;
             }
             
@@ -433,6 +440,16 @@ public class BossJumpingController : MonoBehaviour, IBossController
         if (animator != null)
         {
             animator.SetTrigger("Idle");
+        }
+    }
+
+    private void FaceDirection(Vector2 direction)
+    {
+        if (Mathf.Abs(direction.x) > 0.01f)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = direction.x > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+            transform.localScale = scale;
         }
     }
 
