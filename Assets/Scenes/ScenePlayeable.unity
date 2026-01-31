@@ -1837,7 +1837,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bossPrefabs:
-  - {fileID: 5116301957241195193, guid: 1e7fd678d7418e94b925af5500f83358, type: 3}
   - {fileID: 7670425333492334388, guid: a45664044a33bcc45b93ae8965bff1c7, type: 3}
   introDelay: 1
   afterWinDelay: 1
@@ -2117,7 +2116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d46462f4d9ab00249b6d127fea05a45d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 6
   spriteRenderer: {fileID: 0}
   flipOnlyOnX: 1
   slowMoScale: 0.15
@@ -2314,8 +2313,8 @@ MonoBehaviour:
   jumpHeight: 1.8
   postLandingInvincibility: 0.5
   postDashInvincibilityTime: 0.15
---- !u!70 &1878435162
-CapsuleCollider2D:
+--- !u!61 &1878435162
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2348,9 +2347,18 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.02, y: 0.2}
-  m_Size: {x: 0.3, y: 0.41}
-  m_Direction: 0
+  m_Offset: {x: 0.005213231, y: 0.105097465}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5135135, y: 0}
+    oldSize: {x: 0.37, y: 0.39}
+    newSize: {x: 0.44, y: 0.38}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 0.27158153, y: 0.21019493}
+  m_EdgeRadius: 0
 --- !u!1 &1942714744
 GameObject:
   m_ObjectHideFlags: 0
