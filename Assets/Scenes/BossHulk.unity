@@ -1528,7 +1528,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bossPrefabs:
-  - {fileID: 1153267187061763462, guid: 74bfddf0251f5af42a4917fc8606ee52, type: 3}
+  - {fileID: 284609090891242106, guid: 62d8b661d2ce1bf499db9f9eaacc082a, type: 3}
+  - {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
   introDelay: 1
   afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
