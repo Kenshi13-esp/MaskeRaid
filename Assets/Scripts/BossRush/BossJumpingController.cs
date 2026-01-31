@@ -54,6 +54,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
     private Vector2 shadowMarkerLocalOffset;
     private Vector2 shadowStartPos;
     private Vector2 shadowEndPos;
+    private Collider2D physicalCollider;
 
     private bool isPhaseTwo = false;
     private bool isInAir = false;
@@ -89,6 +90,29 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
+
+        Collider2D[] colliders = GetComponents<Collider2D>();
+        foreach (var col in colliders)
+        {
+            if (!col.isTrigger)
+            {
+                physicalCollider = col;
+                break;
+            }
+        }
+    }
+
+    private void Start()
+    {
+        if (physicalCollider != null && player != null)
+        {
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                Physics2D.IgnoreCollision(physicalCollider, playerCollider, true);
+                Debug.Log("[BossQetza] Ignorando colisiones físicas con el Player");
+            }
+        }
     }
 
     private void CreateShadow(Vector2 bossStartPos, Vector2 bossTargetPos)
