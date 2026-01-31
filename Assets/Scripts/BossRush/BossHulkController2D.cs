@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(BossHealth))]
-public class BossHulkController2D : MonoBehaviour
+public class BossHulkController2D : MonoBehaviour, IBossController
 {
     public enum BossPhase { Phase1, Phase2 }
     public enum State { Idle, Charging, Dashing, Recovery }
@@ -18,26 +19,21 @@ public class BossHulkController2D : MonoBehaviour
     [Header("Fase 1: Dash Simple")]
     [SerializeField] private float phase1_chargeTime = 1.5f;
     [SerializeField] private float phase1_dashSpeed = 12f;
-    [SerializeField] private float phase1_dashDuration = 1f;
     [SerializeField] private float phase1_recoveryTime = 1f;
     [SerializeField] private float phase1_timeBetweenAttacks = 0.5f;
-
-    [Header("Fase 1: Visual Width")]
-    [SerializeField] private Vector2 phase1_chargeScale = new Vector2(2f, 1f);
 
     [Header("=== FASE 2 ===")]
     [Header("Fase 2: Double Dash")]
     [SerializeField] private float phase2_chargeTime = 2f;
     [SerializeField] private float phase2_dashSpeed = 18f;
-    [SerializeField] private float phase2_dashDuration = 0.6f;
     [SerializeField] private float phase2_delayBetweenDashes = 0.15f;
     [SerializeField] private float phase2_recoveryTime = 1.2f;
     [SerializeField] private float phase2_timeBetweenAttacks = 0.8f;
 
-    [Header("Fase 2: Visual Width")]
-    [SerializeField] private Vector2 phase2_chargeScale = new Vector2(2.5f, 1f);
-
     [Header("=== GENERAL ===")]
+    [Header("Dash Settings")]
+    [SerializeField] private float stopDistanceFromPlayer = 0.5f;
+    
     [Header("Walls")]
     [SerializeField] private LayerMask wallsMask;
 
@@ -46,20 +42,15 @@ public class BossHulkController2D : MonoBehaviour
     [SerializeField] private float hitCooldown = 0.5f;
     [SerializeField] private float knockbackForceMultiplier = 1f;
 
-    [Header("Visual Feedback")]
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private Color normalColor = Color.white;
-    [SerializeField] private Color chargingColor = Color.yellow;
-    [SerializeField] private Color dashingColor = Color.red;
-
     private Rigidbody2D rb;
     private BossHealth bossHealth;
     private BossPhase currentPhase = BossPhase.Phase1;
     private State currentState = State.Idle;
-
-    private Vector3 originalScale;
     private float lastHitTime;
     private bool phaseTransitioned = false;
+    private BoxCollider2D physicalCollider;
+    private BoxCollider2D triggerCollider;
+    private List<Collider2D> wallColliders = new List<Collider2D>();
 
     private void Awake()
     {
@@ -72,11 +63,15 @@ public class BossHulkController2D : MonoBehaviour
             if (p != null) player = p.transform;
         }
 
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
-        if (spriteRenderer != null)
-            originalScale = spriteRenderer.transform.localScale;
+        BoxCollider2D[] colliders = GetComponents<BoxCollider2D>();
+        
+        foreach (var col in colliders)
+        {
+            if (col.isTrigger)
+                triggerCollider = col;
+            else
+                physicalCollider = col;
+        }
     }
 
     private void Start()
@@ -87,6 +82,37 @@ public class BossHulkController2D : MonoBehaviour
             return;
         }
 
+        if (physicalCollider != null && player != null)
+        {
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                Physics2D.IgnoreCollision(physicalCollider, playerCollider, true);
+                Debug.Log("[BossHulk] Ignorando colisiones físicas con el Player");
+            }
+        }
+        
+        CacheWallColliders();
+    }
+    
+    private void CacheWallColliders()
+    {
+        wallColliders.Clear();
+        
+        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+        foreach (GameObject obj in allObjects)
+        {
+            if (((1 << obj.layer) & wallsMask) != 0)
+            {
+                Collider2D col = obj.GetComponent<Collider2D>();
+                if (col != null && !col.isTrigger)
+                    wallColliders.Add(col);
+            }
+        }
+    }
+
+    public void ActivateBoss()
+    {
         StartCoroutine(BossLoop());
     }
 
@@ -112,8 +138,6 @@ public class BossHulkController2D : MonoBehaviour
             {
                 yield return StartCoroutine(Phase2Attack());
             }
-
-            yield return null;
         }
     }
 
@@ -122,13 +146,8 @@ public class BossHulkController2D : MonoBehaviour
         float timeBetween = phase1_timeBetweenAttacks;
         yield return new WaitForSeconds(timeBetween);
 
-        Vector2 targetPos = player.position;
-        Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
-
-        yield return StartCoroutine(ChargeAttack(phase1_chargeTime, phase1_chargeScale));
-
-        yield return StartCoroutine(ExecuteDash(direction, phase1_dashSpeed, phase1_dashDuration));
-
+        yield return StartCoroutine(ChargeAttack(phase1_chargeTime));
+        yield return StartCoroutine(ExecuteDashTowardsPlayer(phase1_dashSpeed));
         yield return StartCoroutine(RecoveryState(phase1_recoveryTime));
     }
 
@@ -137,71 +156,84 @@ public class BossHulkController2D : MonoBehaviour
         float timeBetween = phase2_timeBetweenAttacks;
         yield return new WaitForSeconds(timeBetween);
 
-        yield return StartCoroutine(ChargeAttack(phase2_chargeTime, phase2_chargeScale));
-
-        Vector2 firstTargetPos = player.position;
-        Vector2 firstDirection = (firstTargetPos - (Vector2)transform.position).normalized;
-        
-        yield return StartCoroutine(ExecuteDash(firstDirection, phase2_dashSpeed, phase2_dashDuration));
-
+        yield return StartCoroutine(ChargeAttack(phase2_chargeTime));
+        yield return StartCoroutine(ExecuteDashTowardsPlayer(phase2_dashSpeed));
         yield return new WaitForSeconds(phase2_delayBetweenDashes);
-
-        Vector2 secondTargetPos = player.position;
-        Vector2 secondDirection = (secondTargetPos - (Vector2)transform.position).normalized;
-        
-        yield return StartCoroutine(ExecuteDash(secondDirection, phase2_dashSpeed, phase2_dashDuration));
-
+        yield return StartCoroutine(ExecuteDashTowardsPlayer(phase2_dashSpeed));
         yield return StartCoroutine(RecoveryState(phase2_recoveryTime));
     }
 
-    private IEnumerator ChargeAttack(float chargeTime, Vector2 scaleMultiplier)
+    private IEnumerator ChargeAttack(float chargeTime)
     {
         currentState = State.Charging;
         rb.linearVelocity = Vector2.zero;
-
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.color = chargingColor;
-            spriteRenderer.transform.localScale = new Vector3(
-                originalScale.x * scaleMultiplier.x,
-                originalScale.y * scaleMultiplier.y,
-                originalScale.z
-            );
-        }
+        rb.bodyType = RigidbodyType2D.Kinematic;
 
         yield return new WaitForSeconds(chargeTime);
-
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.transform.localScale = originalScale;
-        }
     }
 
-    private IEnumerator ExecuteDash(Vector2 direction, float speed, float duration)
+    private IEnumerator ExecuteDashTowardsPlayer(float speed)
     {
         currentState = State.Dashing;
+        
+        IgnoreWallCollisions(true);
+        
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        yield return new WaitForFixedUpdate();
+        
+        Vector2 startPos = transform.position;
+        Vector2 targetPos = player.position;
+        Vector2 direction = (targetPos - startPos).normalized;
+        float initialDistance = Vector2.Distance(startPos, targetPos);
+        
         rb.linearVelocity = direction * speed;
 
-        if (spriteRenderer != null)
-            spriteRenderer.color = dashingColor;
-
-        float elapsed = 0f;
-        while (elapsed < duration && currentState == State.Dashing)
+        float dashStartTime = Time.time;
+        
+        while (currentState == State.Dashing)
         {
-            elapsed += Time.deltaTime;
-            yield return null;
+            float distanceToTarget = Vector2.Distance(transform.position, targetPos);
+            
+            if (distanceToTarget <= stopDistanceFromPlayer)
+            {
+                Debug.Log($"[BossHulk] ¡Llegó al Player! Distancia final: {distanceToTarget:F2}");
+                currentState = State.Recovery;
+                break;
+            }
+            
+            rb.linearVelocity = direction * speed;
+            yield return new WaitForFixedUpdate();
         }
+        
+        float dashDuration = Time.time - dashStartTime;
+        float finalDistance = Vector2.Distance(transform.position, player.position);
+        Debug.Log($"[BossHulk] Dash finalizado - duración: {dashDuration:F2}s, distancia final al Player: {finalDistance:F2}, estado: {currentState}");
 
         rb.linearVelocity = Vector2.zero;
-
-        if (spriteRenderer != null)
-            spriteRenderer.color = normalColor;
+        rb.bodyType = RigidbodyType2D.Kinematic;
+        
+        IgnoreWallCollisions(false);
+    }
+    
+    private void IgnoreWallCollisions(bool ignore)
+    {
+        if (physicalCollider == null) return;
+        
+        foreach (Collider2D wallCol in wallColliders)
+        {
+            if (wallCol != null)
+                Physics2D.IgnoreCollision(physicalCollider, wallCol, ignore);
+        }
     }
 
     private IEnumerator RecoveryState(float recoveryTime)
     {
-        currentState = State.Recovery;
-        rb.linearVelocity = Vector2.zero;
+        if (currentState != State.Recovery)
+        {
+            currentState = State.Recovery;
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
 
         yield return new WaitForSeconds(recoveryTime);
 
@@ -218,18 +250,6 @@ public class BossHulkController2D : MonoBehaviour
 
         Debug.Log("=== BOSS HULK: FASE 2 ACTIVADA ===");
 
-        if (spriteRenderer != null)
-        {
-            float flashTime = 0.1f;
-            for (int i = 0; i < 5; i++)
-            {
-                spriteRenderer.color = Color.red;
-                yield return new WaitForSeconds(flashTime);
-                spriteRenderer.color = normalColor;
-                yield return new WaitForSeconds(flashTime);
-            }
-        }
-
         yield return new WaitForSeconds(phaseTransitionDelay);
 
         currentPhase = BossPhase.Phase2;
@@ -238,30 +258,40 @@ public class BossHulkController2D : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log($"[BossHulk] Colisión con: {collision.gameObject.name}, Layer: {LayerMask.LayerToName(collision.gameObject.layer)}, Tag: {collision.gameObject.tag}");
-
+        // Comentado: ya no detenemos el dash por colisiones con muros
+        // El Boss ahora solo se detiene al llegar al Player
+        /*
         if (((1 << collision.gameObject.layer) & wallsMask) != 0)
         {
             if (currentState == State.Dashing)
             {
-                Debug.Log("[BossHulk] Chocó con pared, deteniendo dash");
-                rb.linearVelocity = Vector2.zero;
+                Debug.Log($"[BossHulk] Chocó con muro ({collision.gameObject.name}) durante el dash. Deteniendo.");
                 currentState = State.Recovery;
             }
         }
+        */
+    }
 
-        if (collision.collider.CompareTag("Player"))
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        Debug.Log($"[BossHulk] OnTriggerEnter2D detectado! GameObject: {other.gameObject.name}, Tag: {other.tag}, Layer: {LayerMask.LayerToName(other.gameObject.layer)}");
+        
+        if (other.CompareTag("Player"))
         {
-            Debug.Log("[BossHulk] ¡Detectado Player! Intentando hacer daño...");
-            TryDealDamageToPlayer(collision.collider);
+            Debug.Log("[BossHulk] ¡Trigger detectó Player! Intentando hacer daño...");
+            TryDealDamageToPlayer(other);
+        }
+        else
+        {
+            Debug.Log($"[BossHulk] Trigger NO es Player. Tag detectado: {other.tag}");
         }
     }
 
-    private void OnCollisionStay2D(Collision2D collision)
+    private void OnTriggerStay2D(Collider2D other)
     {
-        if (collision.collider.CompareTag("Player"))
+        if (other.CompareTag("Player"))
         {
-            TryDealDamageToPlayer(collision.collider);
+            TryDealDamageToPlayer(other);
         }
     }
 

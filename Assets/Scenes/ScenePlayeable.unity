@@ -1015,7 +1015,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b11bb53d2a6f4499f194e72036b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossDamage: 1
+  baseDamage: 1
 --- !u!1 &744289211
 GameObject:
   m_ObjectHideFlags: 0
@@ -1898,6 +1898,7 @@ MonoBehaviour:
   radialFill: {fileID: 306156237}
   pip1: {fileID: 1677949656}
   pip2: {fileID: 313544516}
+  pip3: {fileID: 0}
   followTarget: {fileID: 0}
   worldOffset: {x: 0, y: 0.45, z: 0}
   lockRotation: 1
@@ -2122,19 +2123,14 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   flipOnlyOnX: 1
   slowMoScale: 0.15
-  maxChargeTime: 0.5
-  minDashDistance: 2
-  maxDashDistance: 8
-  dashDuration: 0.3
-  comboDashes: 2
-  dashCooldownAfterCombo: 0.5
+  defaultDashAbility: {fileID: 0}
   wallsMask:
     serializedVersion: 2
     m_Bits: 0
   wallSkin: 0.02
   dashHitbox: {fileID: 672865535}
-  dashVfxPrefab: {fileID: 3341252077608029899, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
   dashVfxSpawnPoint: {fileID: 45689051}
+  bounceMaterial: {fileID: 6200000, guid: 1559867ce6220e941b71c77afad568fc, type: 2}
 --- !u!61 &1878435156
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2169,7 +2165,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.074724905, y: -0.0010967255}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5135135, y: 0}
@@ -2179,7 +2175,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.102706, y: 0.36187005}
+  m_Size: {x: 0.25, y: 0.45}
   m_EdgeRadius: 0
 --- !u!50 &1878435157
 Rigidbody2D:
@@ -2360,7 +2356,7 @@ MonoBehaviour:
   sideForce: 18
   jumpHeight: 1.8
   postLandingInvincibility: 0.5
-  postDashInvincibilityFrames: 1
+  postDashInvincibilityTime: 0.15
 --- !u!1 &1942714744
 GameObject:
   m_ObjectHideFlags: 0

@@ -20,7 +20,6 @@ public class DashChargeRadial_NoTouch : MonoBehaviour
     // reflection fields (privados)
     FieldInfo isChargingField;
     FieldInfo chargeTimerField;
-    FieldInfo maxChargeTimeField;
     FieldInfo isCooldownField;
 
     void Awake()
@@ -42,16 +41,14 @@ public class DashChargeRadial_NoTouch : MonoBehaviour
 
         isChargingField = t.GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
         chargeTimerField = t.GetField("chargeTimer", BindingFlags.Instance | BindingFlags.NonPublic);
-        maxChargeTimeField = t.GetField("maxChargeTime", BindingFlags.Instance | BindingFlags.NonPublic);
-        isCooldownField = t.GetField("isCooldown", BindingFlags.Instance | BindingFlags.NonPublic); // opcional
+        isCooldownField = t.GetField("isCooldown", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        if (isChargingField == null || chargeTimerField == null || maxChargeTimeField == null)
-            Debug.LogError("DashChargeRadial: no encuentra isCharging/chargeTimer/maxChargeTime en PlayerDashController2D. ¿Has cambiado nombres?");
+        if (isChargingField == null || chargeTimerField == null)
+            Debug.LogError("DashChargeRadial: no encuentra isCharging/chargeTimer en PlayerDashController2D. Â¿Has cambiado nombres?");
     }
 
     void LateUpdate()
     {
-        // seguir
         if (followTarget != null)
         {
             transform.position = followTarget.position + worldOffset;
@@ -62,15 +59,16 @@ public class DashChargeRadial_NoTouch : MonoBehaviour
 
         bool isCharging = (bool)isChargingField.GetValue(dash);
         float chargeTimer = (float)chargeTimerField.GetValue(dash);
-        float maxChargeTime = (float)maxChargeTimeField.GetValue(dash);
 
         bool isCooldown = false;
         if (isCooldownField != null)
             isCooldown = (bool)isCooldownField.GetValue(dash);
 
+        DashAbility currentAbility = dash.GetCurrentDashAbility();
+        float maxChargeTime = (currentAbility != null) ? currentAbility.MaxChargeTime : 0.8f;
+
         float pct = (maxChargeTime <= 0f) ? 0f : Mathf.Clamp01(chargeTimer / maxChargeTime);
 
-        // Mostrar solo mientras cargas (y opcional: ocultar en cooldown)
         if (hideWhenNotCharging && visualRoot != null)
             visualRoot.SetActive(isCharging && !isCooldown);
 

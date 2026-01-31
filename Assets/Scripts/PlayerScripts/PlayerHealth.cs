@@ -8,7 +8,7 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float knockbackDuration = 0.5f;
     [SerializeField] private float sideForce = 18f;
     [SerializeField] private float jumpHeight = 1.8f;
-    [SerializeField] private float postLandingInvincibility = 0.5f;
+    [SerializeField] private float postLandingInvincibility = 0.2f;
     
     [Header("Post-Dash Invincibility")]
     [Tooltip("Tiempo de invulnerabilidad después del dash (segundos). 0.15 = ~9 frames a 60fps")]
@@ -35,9 +35,9 @@ public class PlayerHealth : MonoBehaviour
         if (spriteRenderer != null) spriteTransform = spriteRenderer.transform;
     }
 
-    public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier)
+    public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier, bool ignoreInvincibility = false)
     {
-        if (isLaunched || isInvincible || isDashInvincible) return;
+        if (!ignoreInvincibility && (isLaunched || isInvincible || isDashInvincible)) return;
 
         hp -= amount;
         hp = Mathf.Max(0, hp);

@@ -35,6 +35,7 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     private int bouncesLeft;
     private float lastHitTime;
     private bool isActive = false;
+    private Collider2D physicalCollider;
 
     private void Awake()
     {
@@ -44,6 +45,29 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
             if (p != null) player = p.transform;
+        }
+
+        Collider2D[] colliders = GetComponents<Collider2D>();
+        foreach (var col in colliders)
+        {
+            if (!col.isTrigger)
+            {
+                physicalCollider = col;
+                break;
+            }
+        }
+    }
+
+    private void Start()
+    {
+        if (physicalCollider != null && player != null)
+        {
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                Physics2D.IgnoreCollision(physicalCollider, playerCollider, true);
+                Debug.Log("[BossJelly] Ignorando colisiones físicas con el Player");
+            }
         }
     }
 

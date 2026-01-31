@@ -16,6 +16,8 @@ public class BossRushManager : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private Transform player;
+    
+    private PlayerDashController2D playerDashController;
 
     private int currentRoundIndex = 0;
     private int totalBossesDefeated = 0;
@@ -28,7 +30,20 @@ public class BossRushManager : MonoBehaviour
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null) player = p.transform;
+            if (p != null)
+            {
+                player = p.transform;
+                playerDashController = p.GetComponent<PlayerDashController2D>();
+            }
+        }
+        else
+        {
+            playerDashController = player.GetComponent<PlayerDashController2D>();
+        }
+        
+        if (playerDashController == null)
+        {
+            Debug.LogError("[BossRushManager] No se encontró PlayerDashController2D en el Player.");
         }
     }
 
@@ -127,8 +142,27 @@ public class BossRushManager : MonoBehaviour
         }
 
         currentBossHealth.ResetHealth();
+        
+        currentBossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
+        currentBossHealth.OnBossDeath.AddListener(OnBossDefeated);
 
         ActivateBoss(currentBossInstance);
+    }
+    
+    private void OnBossDefeated(DashAbility dashAbility)
+    {
+        Debug.Log($"[BossRushManager] ¡Boss derrotado! Otorgando poder: {dashAbility?.AbilityName ?? "null"}");
+        
+        if (dashAbility != null && playerDashController != null)
+        {
+            playerDashController.SetDashAbility(dashAbility);
+        }
+        else if (playerDashController == null)
+        {
+            Debug.LogWarning("[BossRushManager] No se puede otorgar poder: PlayerDashController es null.");
+        }
+        
+        totalBossesDefeated++;
     }
 
     private void ActivateBoss(GameObject bossInstance)

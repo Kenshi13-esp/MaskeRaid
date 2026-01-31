@@ -225,6 +225,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 5
+  dashAbilityReward: {fileID: 11400000, guid: e382b6d706bba0042afcd8af71ac047a, type: 2}
+  OnBossDeath:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!212 &-4904831969803159422
 SpriteRenderer:
   m_ObjectHideFlags: 0

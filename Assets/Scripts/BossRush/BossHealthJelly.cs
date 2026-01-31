@@ -1,13 +1,22 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class BossHealth : MonoBehaviour
 {
     [SerializeField] private int maxHP = 1;
+    
+    [Header("Dash Ability Reward")]
+    [Tooltip("Habilidad de dash que otorga este boss al morir")]
+    [SerializeField] private DashAbility dashAbilityReward;
+    
+    public UnityEvent<DashAbility> OnBossDeath;
+    
     private int hp;
 
     public bool IsDead => hp <= 0;
     public int CurrentHP => hp;
     public int MaxHP => maxHP;
+    public DashAbility DashAbilityReward => dashAbilityReward;
 
     private void Awake()
     {
@@ -29,6 +38,12 @@ public class BossHealth : MonoBehaviour
         if (hp <= 0)
         {
             Debug.Log("BOSS DEAD");
+            
+            if (dashAbilityReward != null)
+            {
+                OnBossDeath?.Invoke(dashAbilityReward);
+            }
+            
             gameObject.SetActive(false);
         }
     }

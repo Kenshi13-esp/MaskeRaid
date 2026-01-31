@@ -4,21 +4,23 @@ using UnityEngine;
 public class DashHitbox2D : MonoBehaviour
 {
     [Header("Damage")]
-    [SerializeField] private int bossDamage = 1;
+    [SerializeField] private int baseDamage = 1;
     private bool active;
+    private float currentDamageMultiplier = 1f;
 
-    // Guardamos IDs de targets golpeados DURANTE ESTE DASH
     private readonly HashSet<int> hitThisDash = new HashSet<int>();
 
-    public void BeginDash(int dashSerial)
+    public void BeginDash(int dashSerial, float damageMultiplier = 1f)
     {
         active = true;
-        hitThisDash.Clear();   //  clave: se resetea cada dash
+        currentDamageMultiplier = damageMultiplier;
+        hitThisDash.Clear();
     }
 
     public void EndDash()
     {
         active = false;
+        currentDamageMultiplier = 1f;
         hitThisDash.Clear();
     }
 
@@ -33,8 +35,9 @@ public class DashHitbox2D : MonoBehaviour
             if (hitThisDash.Contains(bossId)) return;
 
             hitThisDash.Add(bossId);
-            boss.TakeDamage(bossDamage);
-            Debug.Log($"DASH HIT BOSS (hp now?) dmg={bossDamage}");
+            int finalDamage = Mathf.RoundToInt(baseDamage * currentDamageMultiplier);
+            boss.TakeDamage(finalDamage);
+            Debug.Log($"DASH HIT BOSS! BaseDmg={baseDamage}, Multiplier={currentDamageMultiplier:F1}x, FinalDmg={finalDamage}");
             return;
         }
     }

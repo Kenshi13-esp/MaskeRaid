@@ -9,6 +9,7 @@ public class DashChargeUI_Combo2_NoTouch : MonoBehaviour
     [SerializeField] private Image radialFill;
     [SerializeField] private Image pip1;
     [SerializeField] private Image pip2;
+    [SerializeField] private Image pip3;
 
     [Header("Follow (World Space UI)")]
     [SerializeField] private Transform followTarget;
@@ -19,8 +20,8 @@ public class DashChargeUI_Combo2_NoTouch : MonoBehaviour
     [SerializeField] private bool hideWhenCooldown = false;
     [SerializeField] private GameObject visualRoot;
 
-    FieldInfo isChargingField, chargeTimerField, maxChargeTimeField;
-    FieldInfo isCooldownField, dashesUsedField, comboDashesField;
+    FieldInfo isChargingField, chargeTimerField;
+    FieldInfo isCooldownField, dashesUsedField;
 
     void Awake()
     {
@@ -35,11 +36,9 @@ public class DashChargeUI_Combo2_NoTouch : MonoBehaviour
 
         isChargingField = t.GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
         chargeTimerField = t.GetField("chargeTimer", BindingFlags.Instance | BindingFlags.NonPublic);
-        maxChargeTimeField = t.GetField("maxChargeTime", BindingFlags.Instance | BindingFlags.NonPublic);
 
         isCooldownField = t.GetField("isCooldown", BindingFlags.Instance | BindingFlags.NonPublic);
         dashesUsedField = t.GetField("dashesUsed", BindingFlags.Instance | BindingFlags.NonPublic);
-        comboDashesField = t.GetField("comboDashes", BindingFlags.Instance | BindingFlags.NonPublic);
     }
 
     void LateUpdate()
@@ -56,19 +55,22 @@ public class DashChargeUI_Combo2_NoTouch : MonoBehaviour
         // 2) Leer estado del dash (sin tocar scripts)
         bool isCharging = (bool)isChargingField.GetValue(dash);
         float timer = (float)chargeTimerField.GetValue(dash);
-        float maxTime = (float)maxChargeTimeField.GetValue(dash);
 
         bool isCooldown = (bool)isCooldownField.GetValue(dash);
         int used = (int)dashesUsedField.GetValue(dash);
-        int maxDashes = (int)comboDashesField.GetValue(dash);
+        
+        DashAbility currentAbility = dash.GetCurrentDashAbility();
+        int maxDashes = (currentAbility != null) ? currentAbility.ComboDashes : 2;
+        float maxTime = (currentAbility != null) ? currentAbility.MaxChargeTime : 0.8f;
 
         int remaining = Mathf.Clamp(maxDashes - used, 0, maxDashes);
 
-        // 3) Pips (2 / 1 / 0)
+        // 3) Pips (3 / 2 / 1 / 0)
         pip1.enabled = remaining >= 1;
         pip2.enabled = remaining >= 2;
+        if (pip3 != null) pip3.enabled = remaining >= 3;
 
-        // 4) Círculo: solo cuando cargas
+        // 4) CÃ­rculo: solo cuando cargas
         float pct = (maxTime <= 0f) ? 0f : Mathf.Clamp01(timer / maxTime);
         radialFill.fillAmount = isCharging ? pct : 0f;
 
