@@ -217,7 +217,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   stunTime: 0.8
-  contactDamage: 1
+  contactDamage: 500
   hitCooldown: 0.35
 --- !u!114 &-4732588315445504479
 MonoBehaviour:
