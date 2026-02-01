@@ -81,7 +81,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edaba422da134af40b626c7e190eacca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 34
+  damage: 100
   hitCooldown: 0.5
 --- !u!1 &7124204006009251031
 GameObject:
@@ -219,7 +219,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   stunTime: 0.8
-  contactDamage: 500
+  contactDamage: 100
   hitCooldown: 0.35
 --- !u!114 &-4732588315445504479
 MonoBehaviour:
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 5
+  maxHP: 1000
   dashAbilityReward: {fileID: 11400000, guid: e382b6d706bba0042afcd8af71ac047a, type: 2}
   OnBossDeath:
     m_PersistentCalls:
@@ -436,7 +436,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edaba422da134af40b626c7e190eacca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 1
+  damage: 100
   hitCooldown: 0.5
 --- !u!1 &8770539837452124410
 GameObject:

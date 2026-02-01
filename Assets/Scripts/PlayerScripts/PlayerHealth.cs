@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Events;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -13,23 +14,23 @@ public class PlayerHealth : MonoBehaviour
     [Header("Post-Dash Invincibility")]
     [Tooltip("Tiempo de invulnerabilidad después del dash (segundos). 0.15 = ~9 frames a 60fps")]
     [SerializeField] private float postDashInvincibilityTime = 0.15f;
-    
-    [Header("Animation")]
-    [SerializeField] private Animator animator;
+
+    [Header("Events")]
+    public UnityEvent OnPlayerDeath;
 
     private int hp;
     private Rigidbody2D rb;
     private PlayerDashController2D dashController;
     private SpriteRenderer spriteRenderer;
     private Transform spriteTransform;
-    
-    private static readonly int HitHash = Animator.StringToHash("Hit");
 
     private bool isLaunched = false;
     private bool isInvincible = false;
     private bool isDashInvincible = false;
+    private bool isDead = false;
 
     public bool IsLaunched => isLaunched;
+    public bool IsDead => isDead;
 
     private void Awake()
     {
@@ -39,26 +40,43 @@ public class PlayerHealth : MonoBehaviour
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer != null) spriteTransform = spriteRenderer.transform;
         
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
+        if (OnPlayerDeath == null)
+            OnPlayerDeath = new UnityEvent();
     }
 
     public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier, bool ignoreInvincibility = false)
     {
-        if (!ignoreInvincibility && (isLaunched || isInvincible || isDashInvincible)) return;
+        if (isDead || (!ignoreInvincibility && (isLaunched || isInvincible || isDashInvincible))) return;
 
         hp -= amount;
         hp = Mathf.Max(0, hp);
         
         SoundManager.PlaySound(SoundType.PLAYER_HIT);
-        
-        if (animator != null)
-            animator.SetTrigger(HitHash);
+
+        if (hp <= 0)
+        {
+            Die();
+            return;
+        }
 
         StopAllCoroutines();
         StartCoroutine(ParabolicLaunch(knockbackDir));
+    }
 
-        if (hp <= 0) Debug.Log("PLAYER DEAD");
+    private void Die()
+    {
+        if (isDead) return;
+        
+        isDead = true;
+        Debug.Log("[PlayerHealth] PLAYER DEAD - Game Over");
+        
+        if (dashController != null)
+            dashController.enabled = false;
+        
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+        
+        OnPlayerDeath?.Invoke();
     }
 
     private IEnumerator ParabolicLaunch(Vector2 dir)
@@ -138,6 +156,15 @@ public class PlayerHealth : MonoBehaviour
         
         isInvincible = false;
     }
+
+    public void HealToFull()
+    {
+        hp = maxHP;
+        Debug.Log($"[PlayerHealth] Vida restaurada a {maxHP} HP");
+    }
+
+    public int GetCurrentHP() => hp;
+    public int GetMaxHP() => maxHP;
 }
 
 

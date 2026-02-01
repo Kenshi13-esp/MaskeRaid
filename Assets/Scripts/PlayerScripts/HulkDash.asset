@@ -12,14 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 699dfa5e0bd7401489b40c46ee7d8aa6, type: 3}
   m_Name: HulkDash
   m_EditorClassIdentifier: 
-  abilityName: Hulk Charge
-  description: "Dash poderoso del Boss Hulk - tarda el doble en cargarse pero hace
-    da\xF1o doble"
-  maxChargeTime: 1.6
+  abilityName: Hulk Dash
+  description: "Dash poderoso de Oniki - 200 de da\xF1o"
+  maxChargeTime: 0.8
   dashDuration: 0.1
   minDashDistance: 3.5
   maxDashDistance: 9
-  comboDashes: 2
+  comboDashes: 1
   dashCooldownAfterCombo: 1
   damageMultiplier: 2
+  enableWallBounce: 0
+  bounceSpeed: 16
+  maxBounces: 6
+  minSpeedAfterBounce: 12
+  maxSpeedClamp: 18
   dashVfxPrefab: {fileID: 201986757626793169, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
