@@ -30,6 +30,9 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     [SerializeField] private int contactDamage = 1;
     [SerializeField] private float hitCooldown = 0.35f;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+
     private Rigidbody2D rb;
     private State state = State.Idle;
     private int bouncesLeft;
@@ -40,6 +43,15 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
+        }
 
         if (player == null)
         {
@@ -84,11 +96,10 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     {
         while (isActive)
         {
-            // 1) Preparaci�n
+            // 1) Preparacion
             state = State.ChargeUp;
             rb.linearVelocity = Vector2.zero;
 
-            // Aqu� puedes activar animaci�n �inflate/squash� si quieres
             yield return new WaitForSeconds(chargeUpTime);
 
             // 2) Dash hacia el player
@@ -99,7 +110,6 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             }
             else
             {
-                // si no hay player, dash random
                 StartDash(Random.insideUnitCircle.normalized);
             }
 
@@ -109,7 +119,6 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             {
                 t += Time.deltaTime;
 
-                // Clamp velocidad para no explotar
                 float spd = rb.linearVelocity.magnitude;
                 if (spd > maxSpeedClamp)
                     rb.linearVelocity = rb.linearVelocity.normalized * maxSpeedClamp;
@@ -117,16 +126,28 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
                 yield return null;
             }
 
-            // Si se qued� sin rebotes, se aturde un momento
+            // Si se quedo sin rebotes, se aturde un momento
             if (state == State.Stunned)
             {
                 rb.linearVelocity = Vector2.zero;
+                
+                if (animator != null)
+                {
+                    animator.SetTrigger("Idle");
+                }
+                
                 yield return new WaitForSeconds(stunTime);
             }
 
-            // 4) Pausa
+            // 4) Pausa - Idle cuando para de moverse
             state = State.Idle;
             rb.linearVelocity = Vector2.zero;
+            
+            if (animator != null)
+            {
+                animator.SetTrigger("Idle");
+            }
+            
             yield return new WaitForSeconds(timeBetweenDashes);
         }
     }
@@ -137,9 +158,13 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
         bouncesLeft = maxBouncesBeforeStop;
 
         rb.linearVelocity = dir * dashSpeed;
+        
+        if (animator != null)
+        {
+            animator.SetTrigger("Roll");
+        }
     }
 
-    // Rebote controlado + contador de rebotes
     private void OnCollisionEnter2D(Collision2D collision)
     {
         // Rebote con paredes
@@ -149,20 +174,22 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
 
             bouncesLeft--;
 
-            // Refuerzo: mantener velocidad m�nima para que se sienta �Dingle�
             float spd = rb.linearVelocity.magnitude;
             if (spd < minSpeedAfterBounce)
                 rb.linearVelocity = rb.linearVelocity.normalized * minSpeedAfterBounce;
 
             if (bouncesLeft <= 0)
             {
-                // Se �revienta� / se para y se aturde
                 state = State.Stunned;
                 rb.linearVelocity = Vector2.zero;
+                
+                if (animator != null)
+                {
+                    animator.SetTrigger("Idle");
+                }
             }
         }
 
-        // Da�o por contacto al player (si choca)
         if (collision.collider.CompareTag("Player"))
         {
             TryDealDamageToPlayer(collision.collider);
