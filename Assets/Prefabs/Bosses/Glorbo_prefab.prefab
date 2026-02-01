@@ -100,7 +100,7 @@ GameObject:
   - component: {fileID: 8012089087267399}
   - component: {fileID: -2614563831943033633}
   m_Layer: 12
-  m_Name: BossJelly
+  m_Name: Glorbo_prefab
   m_TagString: Boss
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
