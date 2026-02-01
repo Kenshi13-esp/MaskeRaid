@@ -194,8 +194,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   dashAbilityReward: {fileID: 11400000, guid: 5924de95d00ab6146bd52c4f262ca572, type: 2}
-  deathSoundType: 2
-  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -227,7 +225,7 @@ MonoBehaviour:
   wallsMask:
     serializedVersion: 2
     m_Bits: 2304
-  contactDamage: 50
+  contactDamage: 200
   hitCooldown: 0.5
   knockbackForceMultiplier: 0.5
 --- !u!61 &6680004740044901353
