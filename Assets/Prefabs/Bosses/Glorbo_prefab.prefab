@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: -2614563831943033633}
   - component: {fileID: 5976260637407191079}
   - component: {fileID: 8657529529474864940}
+  - component: {fileID: 4565047134774070535}
   m_Layer: 12
   m_Name: Glorbo_prefab
   m_TagString: Boss
@@ -355,6 +356,20 @@ MonoBehaviour:
   attackSoundType: 4
   attackLoopClip: {fileID: 8300000, guid: 33e54c210afba2641af0438bbbfefe8b, type: 3}
   attackVolume: 1
+--- !u!114 &4565047134774070535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7124204006009251031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bf3bcd9d3fa48e49b2e57bd9f57086e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flashDuration: 0.1
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &8696912468899959789
 GameObject:
   m_ObjectHideFlags: 0
