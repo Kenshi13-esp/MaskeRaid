@@ -24,6 +24,10 @@ PrefabInstance:
       propertyPath: m_FlipY
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3626916397498700004, guid: 10929c28328c9e741b9e83089a12d63e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 10929c28328c9e741b9e83089a12d63e, type: 3}
       propertyPath: m_LocalScale.x
       value: 4
@@ -194,8 +198,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   dashAbilityReward: {fileID: 11400000, guid: 5924de95d00ab6146bd52c4f262ca572, type: 2}
-  deathSoundType: 2
-  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
