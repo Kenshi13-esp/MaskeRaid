@@ -235,8 +235,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 5
   dashAbilityReward: {fileID: 11400000, guid: e382b6d706bba0042afcd8af71ac047a, type: 2}
-  deathSoundType: 5
-  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -283,7 +281,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_Sprite: {fileID: 8591162363776205851, guid: 99ae15496d74b934aaf4969e340543cd, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

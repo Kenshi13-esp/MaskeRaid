@@ -24,6 +24,10 @@ PrefabInstance:
       propertyPath: m_FlipY
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3626916397498700004, guid: 10929c28328c9e741b9e83089a12d63e, type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 10929c28328c9e741b9e83089a12d63e, type: 3}
       propertyPath: m_LocalScale.x
       value: 4
