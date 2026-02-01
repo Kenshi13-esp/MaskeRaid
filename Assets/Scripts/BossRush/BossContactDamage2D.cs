@@ -7,33 +7,6 @@ public class BossContactDamage2D : MonoBehaviour
 
     private float lastHitTime;
 
-    private void Awake()
-    {
-        Debug.Log($"[BossContactDamage2D] Awake ejecutado en {gameObject.name}");
-    }
-
-    private void Start()
-    {
-        Collider2D col = GetComponent<Collider2D>();
-        if (col == null)
-        {
-            Debug.LogWarning($"[BossContactDamage2D] No se encontró Collider2D en {gameObject.name}");
-        }
-        else if (!col.isTrigger)
-        {
-            Debug.LogWarning($"[BossContactDamage2D] El Collider2D en {gameObject.name} NO es trigger");
-        }
-        else
-        {
-            Debug.Log($"[BossContactDamage2D] Configurado correctamente en {gameObject.name} (Layer: {LayerMask.LayerToName(gameObject.layer)})");
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        Debug.Log($"[BossContactDamage2D] OnTriggerEnter2D con {other.gameObject.name} (Tag: {other.tag}, Layer: {LayerMask.LayerToName(other.gameObject.layer)})");
-    }
-
     private void OnTriggerStay2D(Collider2D other)
     {
         if (Time.time < lastHitTime + hitCooldown) return;
