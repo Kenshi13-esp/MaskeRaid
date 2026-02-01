@@ -41,6 +41,8 @@ public class PlayerHealth : MonoBehaviour
 
         hp -= amount;
         hp = Mathf.Max(0, hp);
+        
+        SoundManager.PlaySound(SoundType.PLAYER_HIT);
 
         StopAllCoroutines();
         StartCoroutine(ParabolicLaunch(knockbackDir));

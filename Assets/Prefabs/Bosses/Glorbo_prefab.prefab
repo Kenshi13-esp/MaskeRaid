@@ -99,6 +99,8 @@ GameObject:
   - component: {fileID: -4904831969803159422}
   - component: {fileID: 8012089087267399}
   - component: {fileID: -2614563831943033633}
+  - component: {fileID: 5976260637407191079}
+  - component: {fileID: 8657529529474864940}
   m_Layer: 12
   m_Name: Glorbo_prefab
   m_TagString: Boss
@@ -233,6 +235,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 5
   dashAbilityReward: {fileID: 11400000, guid: e382b6d706bba0042afcd8af71ac047a, type: 2}
+  deathSoundType: 5
+  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -326,6 +330,33 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5976260637407191079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7124204006009251031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 358a0dc6e091ccd4792f23a3828ae802, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8657529529474864940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7124204006009251031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf5fa490c1b74bc489431b062c51233b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackSoundType: 4
+  attackLoopClip: {fileID: 8300000, guid: 33e54c210afba2641af0438bbbfefe8b, type: 3}
+  attackVolume: 1
 --- !u!1 &8696912468899959789
 GameObject:
   m_ObjectHideFlags: 0

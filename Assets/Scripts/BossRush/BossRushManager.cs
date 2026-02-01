@@ -120,6 +120,8 @@ public class BossRushManager : MonoBehaviour
 
         currentBossInstance = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
 
+        PlaySpawnSound(bossPrefab.name);
+
         currentBossHealth = currentBossInstance.GetComponent<BossHealth>();
         if (currentBossHealth == null)
         {
@@ -133,6 +135,22 @@ public class BossRushManager : MonoBehaviour
         currentBossHealth.OnBossDeath.AddListener(OnBossDefeated);
 
         ActivateBoss(currentBossInstance);
+    }
+    
+    private void PlaySpawnSound(string prefabName)
+    {
+        if (prefabName.Contains("Glorbo"))
+        {
+            SoundManager.PlaySound(SoundType.GLORBO_SPAWN);
+        }
+        else if (prefabName.Contains("Oniki") || prefabName.Contains("Oni"))
+        {
+            SoundManager.PlaySound(SoundType.ONI_SPAWN);
+        }
+        else if (prefabName.Contains("Qetza"))
+        {
+            SoundManager.PlaySound(SoundType.QETZA_SPAWN);
+        }
     }
     
     private void OnBossDefeated(DashAbility dashAbility)

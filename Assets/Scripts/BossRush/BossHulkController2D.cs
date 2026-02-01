@@ -52,12 +52,14 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     private BoxCollider2D triggerCollider;
     private List<Collider2D> wallColliders = new List<Collider2D>();
     private Animator animator;
+    private BossAttackSoundController attackSoundController;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         bossHealth = GetComponent<BossHealth>();
         animator = GetComponent<Animator>();
+        attackSoundController = GetComponent<BossAttackSoundController>();
 
         if (player == null)
         {
@@ -183,6 +185,8 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     {
         currentState = State.Dashing;
         
+        PlayAttackSoundLoop();
+        
         IgnoreWallCollisions(true);
         
         rb.bodyType = RigidbodyType2D.Dynamic;
@@ -216,6 +220,8 @@ public class BossHulkController2D : MonoBehaviour, IBossController
             rb.linearVelocity = direction * speed;
             yield return new WaitForFixedUpdate();
         }
+        
+        StopAttackSoundLoop();
         
         float dashDuration = Time.time - dashStartTime;
         float finalDistance = Vector2.Distance(transform.position, player.position);
@@ -266,6 +272,8 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         rb.linearVelocity = Vector2.zero;
 
         Debug.Log("=== BOSS HULK: FASE 2 ACTIVADA ===");
+        
+        SoundManager.PlaySound(SoundType.BOSS_PHASE_CHANGE);
 
         yield return new WaitForSeconds(phaseTransitionDelay);
 
@@ -348,5 +356,21 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(player.position, 0.5f);
+    }
+    
+    private void PlayAttackSoundLoop()
+    {
+        if (attackSoundController != null)
+        {
+            attackSoundController.StartAttackSound();
+        }
+    }
+    
+    private void StopAttackSoundLoop()
+    {
+        if (attackSoundController != null)
+        {
+            attackSoundController.StopAttackSound();
+        }
     }
 }

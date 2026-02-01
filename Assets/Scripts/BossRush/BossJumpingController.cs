@@ -274,6 +274,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
         {
             isPhaseTwo = true;
             speedMultiplier = phaseTwoSpeedMultiplier;
+            
             if (spriteRenderer != null)
             {
                 spriteRenderer.color = phaseTwoColor;
@@ -313,6 +314,8 @@ public class BossJumpingController : MonoBehaviour, IBossController
         {
             animator.SetTrigger("Jump");
         }
+        
+        SoundManager.PlaySound(SoundType.QETZA_ATTACK_1);
 
         float halfDuration = (jumpDuration / speedMultiplier) / 2f;
         float delayDuration = shadowMoveDelay / speedMultiplier;
@@ -361,6 +364,8 @@ public class BossJumpingController : MonoBehaviour, IBossController
         {
             animator.SetTrigger("Fall");
         }
+        
+        SoundManager.PlaySound(SoundType.QETZA_ATTACK_2);
 
         elapsed = 0f;
         while (elapsed < halfDuration)
@@ -665,6 +670,8 @@ public class BossJumpingController : MonoBehaviour, IBossController
     private void ExecuteImpact(Vector2 targetPos)
     {
         Vector2 impactPosition = targetPos;
+        
+        SoundManager.PlaySound(SoundType.QETZA_GROUND_SLAM);
         
         if (impactVFXPrefab != null)
         {

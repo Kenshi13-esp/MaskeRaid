@@ -58,6 +58,7 @@ public class PlayerDashController2D : MonoBehaviour
     private int bouncesLeft;
     private bool isBouncing;
     private Vector3 originalScale;
+    private AudioSource chargeAudioSource;
 
     public bool IsDashing => isDashing;
 
@@ -73,6 +74,10 @@ public class PlayerDashController2D : MonoBehaviour
             
         originalScale = transform.localScale;
         originalMaterial = rb.sharedMaterial;
+        
+        chargeAudioSource = gameObject.AddComponent<AudioSource>();
+        chargeAudioSource.loop = true;
+        chargeAudioSource.playOnAwake = false;
 
         if (defaultDashAbility != null)
         {

@@ -49,6 +49,7 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
     private Animator animator;
+    private BossAttackSoundController attackSoundController;
 
     private float ChargeUpTime => isPhase2 ? phase2_chargeUpTime : phase1_chargeUpTime;
     private float DashSpeed => isPhase2 ? phase2_dashSpeed : phase1_dashSpeed;
@@ -60,6 +61,7 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
         rb = GetComponent<Rigidbody2D>();
         bossHealth = GetComponent<BossHealth>();
         animator = GetComponent<Animator>();
+        attackSoundController = GetComponent<BossAttackSoundController>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         
         if (spriteRenderer != null)
@@ -150,6 +152,11 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             {
                 rb.linearVelocity = Vector2.zero;
                 
+                if (attackSoundController != null)
+                {
+                    attackSoundController.StopAttackSound();
+                }
+                
                 if (animator != null)
                 {
                     animator.SetTrigger("Idle");
@@ -161,6 +168,11 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             // 4) Pausa - Idle cuando para de moverse
             state = State.Idle;
             rb.linearVelocity = Vector2.zero;
+            
+            if (attackSoundController != null)
+            {
+                attackSoundController.StopAttackSound();
+            }
             
             if (animator != null)
             {
@@ -182,6 +194,8 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             if (currentHP <= maxHP * phase2_healthPercent)
             {
                 isPhase2 = true;
+                
+                SoundManager.PlaySound(SoundType.BOSS_PHASE_CHANGE);
                 
                 if (spriteRenderer != null)
                 {
@@ -232,6 +246,11 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
 
         rb.linearVelocity = dir * DashSpeed;
         
+        if (attackSoundController != null)
+        {
+            attackSoundController.StartAttackSound();
+        }
+        
         if (animator != null)
         {
             animator.SetTrigger("Roll");
@@ -257,6 +276,11 @@ public class BossJellyDingle2D : MonoBehaviour, IBossController
             {
                 state = State.Stunned;
                 rb.linearVelocity = Vector2.zero;
+                
+                if (attackSoundController != null)
+                {
+                    attackSoundController.StopAttackSound();
+                }
                 
                 if (animator != null)
                 {
