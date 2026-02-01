@@ -23,13 +23,18 @@ public class BossJumpingController : MonoBehaviour, IBossController
     [SerializeField] private int dashesPhaseTwo = 3;
     [SerializeField] private float repositionSpeed = 8f;
     [SerializeField] private float repositionThreshold = 0.5f;
+    [SerializeField] private int dashDamage = 1;
+    [SerializeField] private float dashDamageCooldown = 0.3f;
 
     [Header("Impact & Damage")]
     [SerializeField] private int areaDamage = 2;
-    [SerializeField] private float areaRadius = 3.8f;
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private LayerMask obstacleLayer;
     [SerializeField] private GameObject impactVFXPrefab;
+    [SerializeField] private Transform offsetAnimationTransform;
+    
+    [Header("Arena Bounds")]
+    [SerializeField] private float arenaPaddingFromWalls = 2f;
 
     [Header("Phase Two")]
     [SerializeField] private Color phaseTwoColor = Color.red;
@@ -59,6 +64,12 @@ public class BossJumpingController : MonoBehaviour, IBossController
     private bool isInAir = false;
     private float speedMultiplier = 1f;
     private bool isActive = false;
+    private Collider2D physicalCollider;
+    private CapsuleCollider2D impactCollider;
+    private float lastDashDamageTime;
+    
+    private Bounds arenaBounds;
+    private bool arenaBoundsCalculated = false;
 
     public bool IsInAir => isInAir;
 
@@ -69,6 +80,16 @@ public class BossJumpingController : MonoBehaviour, IBossController
         rb.freezeRotation = true;
 
         bossHealth = GetComponent<BossHealth>();
+        
+        Collider2D[] colliders = GetComponents<Collider2D>();
+        foreach (var col in colliders)
+        {
+            if (!col.isTrigger)
+            {
+                physicalCollider = col;
+                break;
+            }
+        }
         
         shadowMarker = transform.Find(shadowMarkerName);
         if (shadowMarker == null)
@@ -86,9 +107,82 @@ public class BossJumpingController : MonoBehaviour, IBossController
         {
             animator = GetComponentInChildren<Animator>();
         }
+        
+        if (offsetAnimationTransform != null)
+        {
+            impactCollider = offsetAnimationTransform.GetComponent<CapsuleCollider2D>();
+            if (impactCollider == null)
+            {
+                Debug.LogWarning("[BossQetza] No se encontró CapsuleCollider2D en OffsetAnimation");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[BossQetza] OffsetAnimation Transform no asignado");
+        }
 
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
+    }
+
+    private void Start()
+    {
+        if (physicalCollider != null && player != null)
+        {
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                Physics2D.IgnoreCollision(physicalCollider, playerCollider, true);
+                Debug.Log("[BossQetza] Ignorando colisiones físicas con el Player");
+            }
+        }
+        
+        CalculateArenaBounds();
+    }
+    
+    private void CalculateArenaBounds()
+    {
+        Collider2D[] walls = Physics2D.OverlapCircleAll(transform.position, 100f, obstacleLayer);
+        
+        if (walls.Length == 0)
+        {
+            Debug.LogWarning("[BossQetza] No se encontraron paredes para calcular límites de arena");
+            arenaBounds = new Bounds(Vector3.zero, new Vector3(100f, 100f, 0f));
+            arenaBoundsCalculated = true;
+            return;
+        }
+        
+        float minX = float.MaxValue;
+        float maxX = float.MinValue;
+        float minY = float.MaxValue;
+        float maxY = float.MinValue;
+        
+        foreach (Collider2D wall in walls)
+        {
+            Bounds wallBounds = wall.bounds;
+            
+            if (wallBounds.min.x < transform.position.x && wallBounds.max.x > wallBounds.min.x)
+                minX = Mathf.Min(minX, wallBounds.max.x);
+            if (wallBounds.max.x > transform.position.x && wallBounds.min.x < wallBounds.max.x)
+                maxX = Mathf.Max(maxX, wallBounds.min.x);
+            if (wallBounds.min.y < transform.position.y && wallBounds.max.y > wallBounds.min.y)
+                minY = Mathf.Min(minY, wallBounds.max.y);
+            if (wallBounds.max.y > transform.position.y && wallBounds.min.y < wallBounds.max.y)
+                maxY = Mathf.Max(maxY, wallBounds.min.y);
+        }
+        
+        minX += arenaPaddingFromWalls;
+        maxX -= arenaPaddingFromWalls;
+        minY += arenaPaddingFromWalls;
+        maxY -= arenaPaddingFromWalls;
+        
+        Vector3 center = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, 0f);
+        Vector3 size = new Vector3(maxX - minX, maxY - minY, 0f);
+        
+        arenaBounds = new Bounds(center, size);
+        arenaBoundsCalculated = true;
+        
+        Debug.Log($"[BossQetza] Arena bounds calculados: Centro={center}, Tamaño={size}");
     }
 
     private void CreateShadow(Vector2 bossStartPos, Vector2 bossTargetPos)
@@ -238,23 +332,30 @@ public class BossJumpingController : MonoBehaviour, IBossController
         yield return new WaitForSeconds(delayDuration);
 
         elapsed = 0f;
+        Vector2 finalClampedShadowPos = shadowEndPos;
         while (elapsed < halfDuration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
             
-            Vector2 currentOffScreenPos = Vector2.Lerp(offScreenPosStart, offScreenPosEnd, t);
+            Vector2 desiredShadowPos = Vector2.Lerp(shadowStartPos, shadowEndPos, t);
+            Vector2 clampedShadowPos = ClampShadowPosition(desiredShadowPos);
+            finalClampedShadowPos = clampedShadowPos;
+            
+            float offsetY = offScreenHeight;
+            Vector2 currentOffScreenPos = new Vector2(clampedShadowPos.x, clampedShadowPos.y + offsetY);
             rb.MovePosition(currentOffScreenPos);
             
             if (shadowInstance != null)
             {
-                shadowInstance.transform.position = Vector2.Lerp(shadowStartPos, shadowEndPos, t);
+                shadowInstance.transform.position = clampedShadowPos;
             }
 
             yield return null;
         }
 
-        rb.MovePosition(offScreenPosEnd);
+        Vector2 finalOffScreenPos = new Vector2(finalClampedShadowPos.x, finalClampedShadowPos.y + offScreenHeight);
+        rb.MovePosition(finalOffScreenPos);
 
         if (animator != null)
         {
@@ -266,12 +367,12 @@ public class BossJumpingController : MonoBehaviour, IBossController
         {
             elapsed += Time.deltaTime;
             float t = elapsed / halfDuration;
-            rb.MovePosition(Vector2.Lerp(offScreenPosEnd, targetLandingPos, t));
+            rb.MovePosition(Vector2.Lerp(finalOffScreenPos, finalClampedShadowPos, t));
 
             yield return null;
         }
 
-        rb.MovePosition(targetLandingPos);
+        rb.MovePosition(finalClampedShadowPos);
 
         if (myCollider != null)
         {
@@ -287,7 +388,7 @@ public class BossJumpingController : MonoBehaviour, IBossController
             animator.SetTrigger("Stand");
         }
 
-        ExecuteImpact(shadowEndPos);
+        ExecuteImpact(finalClampedShadowPos);
     }
 
     private Vector2 ClampToArena(Vector2 targetPos)
@@ -326,6 +427,23 @@ public class BossJumpingController : MonoBehaviour, IBossController
         }
 
         return targetPos;
+    }
+
+    private Vector2 ClampShadowPosition(Vector2 shadowPos)
+    {
+        if (!arenaBoundsCalculated) return shadowPos;
+        
+        float clampedX = Mathf.Clamp(shadowPos.x, arenaBounds.min.x, arenaBounds.max.x);
+        float clampedY = Mathf.Clamp(shadowPos.y, arenaBounds.min.y, arenaBounds.max.y);
+        
+        Vector2 clampedPos = new Vector2(clampedX, clampedY);
+        
+        if (clampedPos != shadowPos)
+        {
+            Debug.Log($"[QetzaShadow] Posición ajustada de ({shadowPos.x:F2}, {shadowPos.y:F2}) a ({clampedPos.x:F2}, {clampedPos.y:F2})");
+        }
+        
+        return clampedPos;
     }
 
     private IEnumerator RepositionToPlayerY()
@@ -474,6 +592,9 @@ public class BossJumpingController : MonoBehaviour, IBossController
             }
             
             rb.MovePosition(nextPos);
+            
+            CheckDashCollision(dashDirection);
+            
             yield return new WaitForFixedUpdate();
         }
 
@@ -493,6 +614,54 @@ public class BossJumpingController : MonoBehaviour, IBossController
         }
     }
 
+    private void CheckDashCollision(Vector2 dashDirection)
+    {
+        if (impactCollider == null) return;
+        
+        if (Time.time - lastDashDamageTime < dashDamageCooldown)
+        {
+            return;
+        }
+        
+        Vector2 colliderWorldPosition = impactCollider.transform.position;
+        Vector2 colliderSize = impactCollider.size;
+        float colliderAngle = impactCollider.transform.eulerAngles.z;
+        
+        Collider2D[] hits = Physics2D.OverlapCapsuleAll(
+            colliderWorldPosition,
+            colliderSize,
+            impactCollider.direction,
+            colliderAngle,
+            playerLayer
+        );
+        
+        foreach (Collider2D h in hits)
+        {
+            PlayerHealth ph = h.GetComponent<PlayerHealth>();
+            PlayerDashController2D playerDash = h.GetComponent<PlayerDashController2D>();
+            
+            if (playerDash != null && playerDash.IsDashing)
+            {
+                continue;
+            }
+            
+            if (ph != null)
+            {
+                Vector2 knockbackDir = dashDirection;
+                if (knockbackDir.sqrMagnitude < 0.01f)
+                {
+                    knockbackDir = Vector2.right;
+                }
+                
+                ph.TakeDamage(dashDamage, knockbackDir, 1.2f);
+                lastDashDamageTime = Time.time;
+                
+                Debug.Log("[BossQetza] Dash golpeó al player");
+                break;
+            }
+        }
+    }
+
     private void ExecuteImpact(Vector2 targetPos)
     {
         Vector2 impactPosition = targetPos;
@@ -508,7 +677,24 @@ public class BossJumpingController : MonoBehaviour, IBossController
             }
         }
         
-        Collider2D[] hits = Physics2D.OverlapCircleAll(impactPosition, areaRadius, playerLayer);
+        if (impactCollider == null)
+        {
+            Debug.LogWarning("[BossQetza] Impact collider no disponible");
+            return;
+        }
+        
+        Vector2 colliderWorldPosition = impactCollider.transform.position;
+        Vector2 colliderSize = impactCollider.size;
+        float colliderAngle = impactCollider.transform.eulerAngles.z;
+        
+        Collider2D[] hits = Physics2D.OverlapCapsuleAll(
+            colliderWorldPosition,
+            colliderSize,
+            impactCollider.direction,
+            colliderAngle,
+            playerLayer
+        );
+        
         foreach (Collider2D h in hits)
         {
             PlayerHealth ph = h.GetComponent<PlayerHealth>();
@@ -533,15 +719,21 @@ public class BossJumpingController : MonoBehaviour, IBossController
 
     private void OnDrawGizmosSelected()
     {
-        Vector3 impactPosition = transform.position;
-        
-        if (shadowMarker != null)
+        if (impactCollider != null)
         {
-            impactPosition = shadowMarker.position;
+            Gizmos.color = Color.red;
+            Vector3 colliderPosition = impactCollider.transform.position;
+            Vector2 size = impactCollider.size;
+            
+            if (impactCollider.direction == CapsuleDirection2D.Vertical)
+            {
+                Gizmos.DrawWireCube(colliderPosition, new Vector3(size.x, size.y, 0.1f));
+            }
+            else
+            {
+                Gizmos.DrawWireCube(colliderPosition, new Vector3(size.y, size.x, 0.1f));
+            }
         }
-        
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(impactPosition, areaRadius);
         
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position + Vector3.up * offScreenHeight, 1f);
