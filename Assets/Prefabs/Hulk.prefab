@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 19052653803436468}
   - component: {fileID: 7045581261249827910}
   m_Layer: 12
-  m_Name: BossHulk
+  m_Name: Hulk
   m_TagString: Boss
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
