@@ -12,6 +12,7 @@ public class BossHealth : MonoBehaviour
     public UnityEvent<DashAbility> OnBossDeath;
     
     private int hp;
+    private DamageFlashEffect damageFlash;
 
     public bool IsDead => hp <= 0;
     public int CurrentHP => hp;
@@ -21,6 +22,12 @@ public class BossHealth : MonoBehaviour
     private void Awake()
     {
         hp = maxHP;
+        damageFlash = GetComponent<DamageFlashEffect>();
+        
+        if (damageFlash == null)
+        {
+            damageFlash = gameObject.AddComponent<DamageFlashEffect>();
+        }
     }
 
     public void ResetHealth()
@@ -38,6 +45,11 @@ public class BossHealth : MonoBehaviour
         Debug.Log("BOSS HP: " + hp + "/" + maxHP);
         
         SoundManager.PlaySound(SoundType.BOSS_HIT);
+        
+        if (damageFlash != null && hp > 0)
+        {
+            damageFlash.Flash();
+        }
 
         if (hp <= 0)
         {
