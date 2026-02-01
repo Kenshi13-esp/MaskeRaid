@@ -9,6 +9,7 @@ public class DamageFlashEffect : MonoBehaviour
     
     private SpriteRenderer[] spriteRenderers;
     private Material[] originalMaterials;
+    private Color[] originalColors;
     private Material flashMaterial;
     private Coroutine flashCoroutine;
     
@@ -16,10 +17,12 @@ public class DamageFlashEffect : MonoBehaviour
     {
         spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
         originalMaterials = new Material[spriteRenderers.Length];
+        originalColors = new Color[spriteRenderers.Length];
         
         for (int i = 0; i < spriteRenderers.Length; i++)
         {
             originalMaterials[i] = spriteRenderers[i].material;
+            originalColors[i] = spriteRenderers[i].color;
         }
         
         CreateFlashMaterial();
@@ -49,12 +52,13 @@ public class DamageFlashEffect : MonoBehaviour
     
     private IEnumerator FlashCoroutine()
     {
-        foreach (SpriteRenderer sr in spriteRenderers)
+        for (int i = 0; i < spriteRenderers.Length; i++)
         {
-            if (sr != null)
+            if (spriteRenderers[i] != null)
             {
-                sr.material = flashMaterial;
-                sr.color = flashColor;
+                originalColors[i] = spriteRenderers[i].color;
+                spriteRenderers[i].material = flashMaterial;
+                spriteRenderers[i].color = flashColor;
             }
         }
         
@@ -65,7 +69,7 @@ public class DamageFlashEffect : MonoBehaviour
             if (spriteRenderers[i] != null && originalMaterials[i] != null)
             {
                 spriteRenderers[i].material = originalMaterials[i];
-                spriteRenderers[i].color = Color.white;
+                spriteRenderers[i].color = originalColors[i];
             }
         }
         
