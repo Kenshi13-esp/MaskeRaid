@@ -28,6 +28,7 @@ public class BossRushManager : MonoBehaviour
     private PlayerHealth playerHealth;
     private GameObject gameOverInstance;
     private VictoryHandler victoryHandler;
+    private GameObject gameSceneUI;
 
     private int currentRoundIndex = 0;
     private int totalBossesDefeated = 0;
@@ -267,6 +268,14 @@ public class BossRushManager : MonoBehaviour
             currentBossInstance.SetActive(false);
         }
         
+        GameObject uiObject = GameObject.Find("UI");
+        if (uiObject != null)
+        {
+            gameSceneUI = uiObject;
+            gameSceneUI.SetActive(false);
+            Debug.Log("[BossRushManager] UI de GameScene desactivado.");
+        }
+        
         if (gameOverPrefab != null)
         {
             gameOverInstance = Instantiate(gameOverPrefab);
@@ -289,6 +298,14 @@ public class BossRushManager : MonoBehaviour
         }
         
         Time.timeScale = 0f;
+    }
+    
+    private void OnDestroy()
+    {
+        if (gameSceneUI != null)
+        {
+            gameSceneUI.SetActive(true);
+        }
     }
 }
 

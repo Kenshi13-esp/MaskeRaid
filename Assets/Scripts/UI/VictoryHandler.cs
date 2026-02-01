@@ -13,6 +13,7 @@ public class VictoryHandler : MonoBehaviour
     
     private GameObject victoryCanvasInstance;
     private bool victoryTriggered = false;
+    private GameObject gameSceneUI;
     
     public void SetExitSprite(Sprite sprite)
     {
@@ -31,9 +32,22 @@ public class VictoryHandler : MonoBehaviour
         
         Time.timeScale = 0f;
         
+        DisableGameSceneUI();
+        
         ShowVictoryScreen();
         
         StartCoroutine(ReturnToMainMenuAfterDelay());
+    }
+    
+    private void DisableGameSceneUI()
+    {
+        GameObject uiObject = GameObject.Find("UI");
+        if (uiObject != null)
+        {
+            gameSceneUI = uiObject;
+            gameSceneUI.SetActive(false);
+            Debug.Log("[VictoryHandler] UI de GameScene desactivado.");
+        }
     }
     
     private void ShowVictoryScreen()
@@ -103,6 +117,11 @@ public class VictoryHandler : MonoBehaviour
         if (victoryCanvasInstance != null)
         {
             Destroy(victoryCanvasInstance);
+        }
+        
+        if (gameSceneUI != null)
+        {
+            gameSceneUI.SetActive(true);
         }
     }
 }
