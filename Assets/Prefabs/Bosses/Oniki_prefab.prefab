@@ -229,7 +229,7 @@ MonoBehaviour:
   wallsMask:
     serializedVersion: 2
     m_Bits: 2304
-  contactDamage: 50
+  contactDamage: 200
   hitCooldown: 0.5
   knockbackForceMultiplier: 0.5
 --- !u!61 &6680004740044901353
