@@ -1015,7 +1015,110 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b11bb53d2a6f4499f194e72036b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossDamage: 1
+  baseDamage: 1
+--- !u!1 &680099254
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 680099256}
+  - component: {fileID: 680099255}
+  m_Layer: 0
+  m_Name: SoundManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &680099255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680099254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bef58fd610b4ac048bacaf95593ae6d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sounds:
+  - soundType: 0
+    clip: {fileID: 8300000, guid: 45b2146d512be084199580942b658ab4, type: 3}
+    defaultVolume: 1
+  - soundType: 1
+    clip: {fileID: 8300000, guid: a9c2eb676d96b184dac292e075bce610, type: 3}
+    defaultVolume: 1
+  - soundType: 2
+    clip: {fileID: 8300000, guid: 35efa0b22cb58844e90a6ac46002c7a1, type: 3}
+    defaultVolume: 1
+  - soundType: 3
+    clip: {fileID: 8300000, guid: 1ccb3bab44be9e749b639034e33d81fe, type: 3}
+    defaultVolume: 1
+  - soundType: 4
+    clip: {fileID: 8300000, guid: 33e54c210afba2641af0438bbbfefe8b, type: 3}
+    defaultVolume: 1
+  - soundType: 5
+    clip: {fileID: 8300000, guid: 8fdab32eadc3db34ab581c13702ff5c4, type: 3}
+    defaultVolume: 1
+  - soundType: 6
+    clip: {fileID: 8300000, guid: 8728e347fec57064eb58523def051a9e, type: 3}
+    defaultVolume: 1
+  - soundType: 7
+    clip: {fileID: 8300000, guid: 30ba2a8b09ab07e4b86ab137bb8edd6c, type: 3}
+    defaultVolume: 1
+  - soundType: 8
+    clip: {fileID: 8300000, guid: 92b487461390a994b9e9e8f34d49e02a, type: 3}
+    defaultVolume: 1
+  - soundType: 9
+    clip: {fileID: 8300000, guid: 6a972ec1c9b16464ea06b485723f95cd, type: 3}
+    defaultVolume: 1
+  - soundType: 10
+    clip: {fileID: 8300000, guid: a5db862570904bb438c4848a749a2096, type: 3}
+    defaultVolume: 1
+  - soundType: 11
+    clip: {fileID: 8300000, guid: 39b155dde8a323d4d98295a512391305, type: 3}
+    defaultVolume: 1
+  - soundType: 12
+    clip: {fileID: 8300000, guid: 167bd58e32e0a33469a9aaebdd376306, type: 3}
+    defaultVolume: 1
+  - soundType: 13
+    clip: {fileID: 8300000, guid: c4ef1409f475ccd47a4395152bfceea6, type: 3}
+    defaultVolume: 1
+  - soundType: 14
+    clip: {fileID: 8300000, guid: 59975eca0c4684343a1906e5f269caaf, type: 3}
+    defaultVolume: 1
+  - soundType: 15
+    clip: {fileID: 8300000, guid: 8be21d7b2753f504191f6e87c19878d7, type: 3}
+    defaultVolume: 1
+  - soundType: 16
+    clip: {fileID: 8300000, guid: dc9771e9265b6d94aa6fcd89282abbb1, type: 3}
+    defaultVolume: 1
+  - soundType: 17
+    clip: {fileID: 8300000, guid: ada2af3dd7f70c248a0f59f697134a52, type: 3}
+    defaultVolume: 1
+  - soundType: 18
+    clip: {fileID: 8300000, guid: 1f07540e3010f044bbccb0e9c8487764, type: 3}
+    defaultVolume: 1
+  audioSourcePoolSize: 19
+--- !u!4 &680099256
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680099254}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.09364596, y: -1.0279834, z: 0.051277786}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &744289211
 GameObject:
   m_ObjectHideFlags: 0
@@ -1896,6 +1999,7 @@ MonoBehaviour:
   radialFill: {fileID: 306156237}
   pip1: {fileID: 1677949656}
   pip2: {fileID: 313544516}
+  pip3: {fileID: 0}
   followTarget: {fileID: 0}
   worldOffset: {x: 0, y: 0.45, z: 0}
   lockRotation: 1
@@ -2120,19 +2224,14 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   flipOnlyOnX: 1
   slowMoScale: 0.15
-  maxChargeTime: 0.5
-  minDashDistance: 2
-  maxDashDistance: 8
-  dashDuration: 0.3
-  comboDashes: 2
-  dashCooldownAfterCombo: 0.5
+  defaultDashAbility: {fileID: 0}
   wallsMask:
     serializedVersion: 2
     m_Bits: 0
   wallSkin: 0.02
   dashHitbox: {fileID: 672865535}
-  dashVfxPrefab: {fileID: 3341252077608029899, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
   dashVfxSpawnPoint: {fileID: 45689051}
+  bounceMaterial: {fileID: 0}
 --- !u!50 &1878435157
 Rigidbody2D:
   serializedVersion: 5
@@ -2594,3 +2693,4 @@ SceneRoots:
   - {fileID: 1147465883}
   - {fileID: 41092719}
   - {fileID: 1549834996}
+  - {fileID: 680099256}
