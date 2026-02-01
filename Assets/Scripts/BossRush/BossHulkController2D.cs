@@ -51,11 +51,13 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     private BoxCollider2D physicalCollider;
     private BoxCollider2D triggerCollider;
     private List<Collider2D> wallColliders = new List<Collider2D>();
+    private Animator animator;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         bossHealth = GetComponent<BossHealth>();
+        animator = GetComponent<Animator>();
 
         if (player == null)
         {
@@ -158,7 +160,7 @@ public class BossHulkController2D : MonoBehaviour, IBossController
 
         yield return StartCoroutine(ChargeAttack(phase2_chargeTime));
         yield return StartCoroutine(ExecuteDashTowardsPlayer(phase2_dashSpeed));
-        yield return new WaitForSeconds(phase2_delayBetweenDashes);
+        yield return StartCoroutine(ChargeAttack(phase2_delayBetweenDashes));
         yield return StartCoroutine(ExecuteDashTowardsPlayer(phase2_dashSpeed));
         yield return StartCoroutine(RecoveryState(phase2_recoveryTime));
     }
@@ -168,6 +170,11 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         currentState = State.Charging;
         rb.linearVelocity = Vector2.zero;
         rb.bodyType = RigidbodyType2D.Kinematic;
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Anticipation");
+        }
 
         yield return new WaitForSeconds(chargeTime);
     }
@@ -187,6 +194,11 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         float initialDistance = Vector2.Distance(startPos, targetPos);
         
         rb.linearVelocity = direction * speed;
+
+        if (animator != null)
+        {
+            animator.SetTrigger("Dash");
+        }
 
         float dashStartTime = Time.time;
         
@@ -211,6 +223,11 @@ public class BossHulkController2D : MonoBehaviour, IBossController
 
         rb.linearVelocity = Vector2.zero;
         rb.bodyType = RigidbodyType2D.Kinematic;
+        
+        if (animator != null)
+        {
+            animator.SetTrigger("Idle");
+        }
         
         IgnoreWallCollisions(false);
     }

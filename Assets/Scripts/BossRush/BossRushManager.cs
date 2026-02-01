@@ -23,7 +23,7 @@ public class BossRushManager : MonoBehaviour
     private int totalBossesDefeated = 0;
     private BossHealth currentBossHealth;
     private GameObject currentBossInstance;
-    private List<int> availableBossIndices = new List<int>();
+    private int currentBossSequenceIndex = 0;
 
     private void Awake()
     {
@@ -61,20 +61,7 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        InitializeBossPool();
         StartCoroutine(RunBossRush());
-    }
-
-    private void InitializeBossPool()
-    {
-        availableBossIndices.Clear();
-        for (int i = 0; i < bossPrefabs.Count; i++)
-        {
-            if (bossPrefabs[i] != null)
-            {
-                availableBossIndices.Add(i);
-            }
-        }
     }
 
     private IEnumerator RunBossRush()
@@ -83,26 +70,23 @@ public class BossRushManager : MonoBehaviour
         {
             currentRoundIndex++;
 
-            if (availableBossIndices.Count == 0)
+            if (currentBossSequenceIndex >= bossPrefabs.Count)
             {
-                Debug.Log($"=== CICLO COMPLETADO: Todos los {bossPrefabs.Count} bosses derrotados. Reiniciando pool... ===");
-                InitializeBossPool();
+                Debug.Log($"=== CICLO COMPLETADO: Todos los {bossPrefabs.Count} bosses derrotados. Reiniciando secuencia... ===");
+                currentBossSequenceIndex = 0;
             }
 
-            int randomIndex = Random.Range(0, availableBossIndices.Count);
-            int bossIndex = availableBossIndices[randomIndex];
-            availableBossIndices.RemoveAt(randomIndex);
-
-            GameObject bossPrefab = bossPrefabs[bossIndex];
+            GameObject bossPrefab = bossPrefabs[currentBossSequenceIndex];
 
             if (bossPrefab == null)
             {
-                Debug.LogError($"[BossRushManager] Boss en índice {bossIndex} es null.");
+                Debug.LogError($"[BossRushManager] Boss en índice {currentBossSequenceIndex} es null.");
+                currentBossSequenceIndex++;
                 continue;
             }
 
             string bossName = bossPrefab.name;
-            Debug.Log($"=== RONDA {currentRoundIndex}: {bossName} ({totalBossesDefeated + 1} total) ===");
+            Debug.Log($"=== RONDA {currentRoundIndex}: {bossName} (Boss #{currentBossSequenceIndex + 1}/{bossPrefabs.Count}) ===");
 
             yield return new WaitForSeconds(introDelay);
 
@@ -120,6 +104,8 @@ public class BossRushManager : MonoBehaviour
             {
                 Destroy(currentBossInstance);
             }
+
+            currentBossSequenceIndex++;
 
             yield return new WaitForSeconds(afterWinDelay);
         }

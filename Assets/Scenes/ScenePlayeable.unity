@@ -1015,7 +1015,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b11bb53d2a6f4499f194e72036b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bossDamage: 1
+  baseDamage: 1
 --- !u!1 &744289211
 GameObject:
   m_ObjectHideFlags: 0
@@ -1837,7 +1837,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bossPrefabs:
-  - {fileID: 1153267187061763462, guid: 74bfddf0251f5af42a4917fc8606ee52, type: 3}
+  - {fileID: 7124204006009251031, guid: 4fcbc8c888d09b7459faa4b7230d2c43, type: 3}
+  - {fileID: 7933822788505597596, guid: 770d018d67d5b064c96bdb29bb8f6184, type: 3}
+  - {fileID: 5116301957241195193, guid: 1e7fd678d7418e94b925af5500f83358, type: 3}
   introDelay: 1
   afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
@@ -1896,6 +1898,7 @@ MonoBehaviour:
   radialFill: {fileID: 306156237}
   pip1: {fileID: 1677949656}
   pip2: {fileID: 313544516}
+  pip3: {fileID: 0}
   followTarget: {fileID: 0}
   worldOffset: {x: 0, y: 0.45, z: 0}
   lockRotation: 1
@@ -2120,19 +2123,14 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   flipOnlyOnX: 1
   slowMoScale: 0.15
-  maxChargeTime: 0.5
-  minDashDistance: 2
-  maxDashDistance: 8
-  dashDuration: 0.3
-  comboDashes: 2
-  dashCooldownAfterCombo: 0.5
+  defaultDashAbility: {fileID: 0}
   wallsMask:
     serializedVersion: 2
     m_Bits: 0
   wallSkin: 0.02
   dashHitbox: {fileID: 672865535}
-  dashVfxPrefab: {fileID: 3341252077608029899, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
   dashVfxSpawnPoint: {fileID: 45689051}
+  bounceMaterial: {fileID: 0}
 --- !u!50 &1878435157
 Rigidbody2D:
   serializedVersion: 5
