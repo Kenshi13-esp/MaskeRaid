@@ -173,6 +173,9 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         rb.linearVelocity = Vector2.zero;
         rb.bodyType = RigidbodyType2D.Kinematic;
 
+        Vector2 directionToPlayer = (player.position - transform.position).normalized;
+        FaceDirection(directionToPlayer);
+
         if (animator != null)
         {
             animator.SetTrigger("Anticipation");
@@ -196,6 +199,8 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         Vector2 targetPos = player.position;
         Vector2 direction = (targetPos - startPos).normalized;
         float initialDistance = Vector2.Distance(startPos, targetPos);
+        
+        FaceDirection(direction);
         
         rb.linearVelocity = direction * speed;
 
@@ -342,6 +347,16 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         else
         {
             Debug.LogWarning("[BossHulk] ¡PlayerHealth no encontrado en el Player!");
+        }
+    }
+
+    private void FaceDirection(Vector2 direction)
+    {
+        if (Mathf.Abs(direction.x) > 0.01f)
+        {
+            Vector3 scale = transform.localScale;
+            scale.x = direction.x > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+            transform.localScale = scale;
         }
     }
 

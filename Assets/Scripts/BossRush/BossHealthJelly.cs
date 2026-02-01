@@ -9,11 +9,6 @@ public class BossHealth : MonoBehaviour
     [Tooltip("Habilidad de dash que otorga este boss al morir")]
     [SerializeField] private DashAbility dashAbilityReward;
     
-    [Header("Death Sound")]
-    [Tooltip("Sonido que se reproduce al morir (opcional, si no se asigna no reproduce nada)")]
-    [SerializeField] private SoundType deathSoundType;
-    [SerializeField] private bool playDeathSound = false;
-    
     public UnityEvent<DashAbility> OnBossDeath;
     
     private int hp;
@@ -38,18 +33,11 @@ public class BossHealth : MonoBehaviour
         hp -= amount;
         hp = Mathf.Max(0, hp);
 
-        Debug.Log("BOSS HP: " + hp + "/" + maxHP);
-        
-        SoundManager.PlaySound(SoundType.BOSS_HIT);
+        GameFeel.Boss.TakeDamage();
 
         if (hp <= 0)
         {
-            Debug.Log("BOSS DEAD");
-            
-            if (playDeathSound)
-            {
-                SoundManager.PlaySound(deathSoundType);
-            }
+            GameFeel.Boss.Death();
             
             if (dashAbilityReward != null)
             {

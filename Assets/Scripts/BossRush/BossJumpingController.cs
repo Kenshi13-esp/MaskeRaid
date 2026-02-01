@@ -573,6 +573,8 @@ public class BossJumpingController : MonoBehaviour, IBossController
                 yield break;
             }
             
+            FaceDirection(dashDirection);
+            
             Vector2 nextPos = rb.position + dashDirection * dashSpeed * speedMultiplier * Time.fixedDeltaTime;
             
             RaycastHit2D immediateWallCheck = Physics2D.Raycast(rb.position, dashDirection, colliderRadius + 0.5f, obstacleLayer);
@@ -613,9 +615,12 @@ public class BossJumpingController : MonoBehaviour, IBossController
     {
         if (Mathf.Abs(direction.x) > 0.01f)
         {
-            Vector3 scale = transform.localScale;
-            scale.x = direction.x > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
-            transform.localScale = scale;
+            if (spriteRenderer != null)
+            {
+                Vector3 scale = spriteRenderer.transform.localScale;
+                scale.x = direction.x > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+                spriteRenderer.transform.localScale = scale;
+            }
         }
     }
 
