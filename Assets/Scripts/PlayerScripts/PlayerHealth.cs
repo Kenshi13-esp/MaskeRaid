@@ -42,10 +42,15 @@ public class PlayerHealth : MonoBehaviour
         hp -= amount;
         hp = Mathf.Max(0, hp);
 
+        GameFeel.Player.TakeDamage();
+
         StopAllCoroutines();
         StartCoroutine(ParabolicLaunch(knockbackDir));
 
-        if (hp <= 0) Debug.Log("PLAYER DEAD");
+        if (hp <= 0)
+        {
+            GameFeel.Player.Death();
+        }
     }
 
     private IEnumerator ParabolicLaunch(Vector2 dir)

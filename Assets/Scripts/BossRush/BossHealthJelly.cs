@@ -33,11 +33,11 @@ public class BossHealth : MonoBehaviour
         hp -= amount;
         hp = Mathf.Max(0, hp);
 
-        Debug.Log("BOSS HP: " + hp + "/" + maxHP);
+        GameFeel.Boss.TakeDamage();
 
         if (hp <= 0)
         {
-            Debug.Log("BOSS DEAD");
+            GameFeel.Boss.Death();
             
             if (dashAbilityReward != null)
             {
