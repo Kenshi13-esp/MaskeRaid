@@ -11,13 +11,24 @@ public class PlayerDashController2D : MonoBehaviour
     [Header("Visual (flip)")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private bool flipOnlyOnX = true;
-
-    [Header("Dash Charge + Slowmo")]
-    [SerializeField] private float slowMoScale = 0.25f;
+    
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    [Tooltip("Animator que se usa durante el dash con rebote (Glorbo)")]
+    [SerializeField] private RuntimeAnimatorController glorboAnimatorController;
+    [Tooltip("Animator que se usa con el poder de Oniki/Hulk")]
+    [SerializeField] private RuntimeAnimatorController onikiAnimatorController;
 
     [Header("Dash Abilities")]
     [Tooltip("Habilidad de dash inicial (default)")]
     [SerializeField] private DashAbility defaultDashAbility;
+    [Tooltip("Habilidad básica que restaura el animator original")]
+    [SerializeField] private DashAbility basicDashAbility;
+    [Tooltip("Habilidad de Hulk que activa el animator de Oniki")]
+    [SerializeField] private DashAbility hulkDashAbility;
+
+    [Header("Dash Charge + Slowmo")]
+    [SerializeField] private float slowMoScale = 0.25f;
 
     [Header("Walls (no atraviesa paredes)")]
     [SerializeField] private LayerMask wallsMask;
@@ -37,9 +48,14 @@ public class PlayerDashController2D : MonoBehaviour
     
     private Rigidbody2D rb;
     private PhysicsMaterial2D originalMaterial;
+    private RuntimeAnimatorController originalAnimatorController;
     private PlayerHealth playerHealth;
     private BoxCollider2D boxCollider;
     private Collider2D[] enemyColliders;
+    
+    private static readonly int RunHash = Animator.StringToHash("Run");
+    private static readonly int ChargeHash = Animator.StringToHash("Charge");
+    private static readonly int DashHash = Animator.StringToHash("Dash");
 
     private Vector2 moveInput;
     private Vector2 lastMoveDir = Vector2.right;
@@ -71,6 +87,12 @@ public class PlayerDashController2D : MonoBehaviour
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
+        
+        if (animator != null)
+            originalAnimatorController = animator.runtimeAnimatorController;
             
         originalScale = transform.localScale;
         originalMaterial = rb.sharedMaterial;
@@ -146,6 +168,12 @@ public class PlayerDashController2D : MonoBehaviour
                 ReleaseDash();
             }
         }
+        
+        if (animator != null)
+        {
+            bool isMoving = moveInput.sqrMagnitude > 0.01f && !isDashing;
+            animator.SetBool(RunHash, isMoving);
+        }
     }
 
     private void FixedUpdate()
@@ -219,6 +247,9 @@ public class PlayerDashController2D : MonoBehaviour
 
         Time.timeScale = slowMoScale;
         Time.fixedDeltaTime = defaultFixedDeltaTime * Time.timeScale;
+        
+        if (animator != null)
+            animator.SetBool(ChargeHash, true);
     }
 
     private void ReleaseDash()
@@ -231,6 +262,12 @@ public class PlayerDashController2D : MonoBehaviour
 
         Time.timeScale = 1f;
         Time.fixedDeltaTime = defaultFixedDeltaTime;
+        
+        if (animator != null)
+        {
+            animator.SetBool(ChargeHash, false);
+            animator.SetTrigger(DashHash);
+        }
 
         float maxCharge = currentDashAbility.MaxChargeTime;
         float t = Mathf.Clamp01(chargeTimer / maxCharge);
@@ -312,6 +349,7 @@ public class PlayerDashController2D : MonoBehaviour
             playerHealth.SetDashInvincibility(false);
 
         isDashing = false;
+        
         dashesUsed++;
 
         if (playerHealth != null)
@@ -406,6 +444,7 @@ public class PlayerDashController2D : MonoBehaviour
             playerHealth.SetDashInvincibility(false);
 
         isDashing = false;
+        
         dashesUsed++;
 
         if (playerHealth != null)
@@ -496,6 +535,25 @@ public class PlayerDashController2D : MonoBehaviour
         {
             StopCoroutine(cooldownCoroutine);
             cooldownCoroutine = null;
+        }
+        
+        if (animator != null)
+        {
+            if (basicDashAbility != null && newAbility == basicDashAbility && originalAnimatorController != null)
+            {
+                animator.runtimeAnimatorController = originalAnimatorController;
+                Debug.Log($"[PlayerDash] ¡Animator restaurado al original (Player_Controller)!");
+            }
+            else if (hulkDashAbility != null && newAbility == hulkDashAbility && onikiAnimatorController != null)
+            {
+                animator.runtimeAnimatorController = onikiAnimatorController;
+                Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Oniki (HulkDash)!");
+            }
+            else if (newAbility.EnableWallBounce && glorboAnimatorController != null)
+            {
+                animator.runtimeAnimatorController = glorboAnimatorController;
+                Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Glorbo!");
+            }
         }
         
         StartCoroutine(PowerUpVisualFeedback());
