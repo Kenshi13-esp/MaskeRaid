@@ -30,10 +30,14 @@ public class BossHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (hp <= 0) return;
+        
         hp -= amount;
         hp = Mathf.Max(0, hp);
 
         Debug.Log("BOSS HP: " + hp + "/" + maxHP);
+        
+        SoundManager.PlaySound(SoundType.BOSS_HIT);
 
         if (hp <= 0)
         {

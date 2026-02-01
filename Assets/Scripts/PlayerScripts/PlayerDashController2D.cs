@@ -296,9 +296,31 @@ public class PlayerDashController2D : MonoBehaviour
         }
     }
 
+    private void PlayDashSound()
+    {
+        if (animator == null) return;
+        
+        RuntimeAnimatorController currentController = animator.runtimeAnimatorController;
+        
+        if (currentController == glorboAnimatorController)
+        {
+            SoundManager.PlaySound(SoundType.GLORBO_ATTACK);
+        }
+        else if (currentController == onikiAnimatorController)
+        {
+            SoundManager.PlaySound(SoundType.ONI_ATTACK);
+        }
+        else
+        {
+            SoundManager.PlaySound(SoundType.PLAYER_ATTACK);
+        }
+    }
+
     private IEnumerator DashRoutine_ByDuration(Vector2 dashDir, float dashDistance)
     {
         isDashing = true;
+        PlayDashSound();
+        
         rb.linearVelocity = Vector2.zero;
 
         if (playerHealth != null)
@@ -377,6 +399,8 @@ public class PlayerDashController2D : MonoBehaviour
         Debug.Log($"[Dash] DashRoutine_WithBounce iniciado. BounceSpeed: {currentDashAbility.BounceSpeed}, MaxBounces: {currentDashAbility.MaxBounces}, Duration: {currentDashAbility.DashDuration}");
         
         isDashing = true;
+        PlayDashSound();
+        
         isBouncing = true;
         bouncesLeft = currentDashAbility.MaxBounces;
         
