@@ -58,6 +58,7 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     private BossAttackSoundController attackSoundController;
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
+    private DamageFlashEffect damageFlashEffect;
 
     private void Awake()
     {
@@ -65,6 +66,7 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         bossHealth = GetComponent<BossHealth>();
         animator = GetComponent<Animator>();
         attackSoundController = GetComponent<BossAttackSoundController>();
+        damageFlashEffect = GetComponent<DamageFlashEffect>();
         
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
@@ -295,6 +297,12 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         {
             spriteRenderer.color = phase2Color;
             Debug.Log($"[BossHulk] Color cambiado a rojo (Fase 2): {phase2Color}");
+            
+            if (damageFlashEffect != null)
+            {
+                damageFlashEffect.UpdateBaseColors();
+                Debug.Log("[BossHulk] Colores base actualizados en DamageFlashEffect");
+            }
         }
 
         yield return new WaitForSeconds(phaseTransitionDelay);

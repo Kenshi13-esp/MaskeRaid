@@ -50,6 +50,17 @@ public class DamageFlashEffect : MonoBehaviour
         flashCoroutine = StartCoroutine(FlashCoroutine());
     }
     
+    public void UpdateBaseColors()
+    {
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null)
+            {
+                originalColors[i] = spriteRenderers[i].color;
+            }
+        }
+    }
+    
     private IEnumerator FlashCoroutine()
     {
         for (int i = 0; i < spriteRenderers.Length; i++)
