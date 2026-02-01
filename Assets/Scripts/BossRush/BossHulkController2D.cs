@@ -42,6 +42,9 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     [SerializeField] private float hitCooldown = 0.5f;
     [SerializeField] private float knockbackForceMultiplier = 1f;
 
+    [Header("Phase 2 Visual")]
+    [SerializeField] private Color phase2Color = Color.red;
+
     private Rigidbody2D rb;
     private BossHealth bossHealth;
     private BossPhase currentPhase = BossPhase.Phase1;
@@ -53,6 +56,8 @@ public class BossHulkController2D : MonoBehaviour, IBossController
     private List<Collider2D> wallColliders = new List<Collider2D>();
     private Animator animator;
     private BossAttackSoundController attackSoundController;
+    private SpriteRenderer spriteRenderer;
+    private Color originalColor;
 
     private void Awake()
     {
@@ -60,6 +65,12 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         bossHealth = GetComponent<BossHealth>();
         animator = GetComponent<Animator>();
         attackSoundController = GetComponent<BossAttackSoundController>();
+        
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+        }
 
         if (player == null)
         {
@@ -279,6 +290,12 @@ public class BossHulkController2D : MonoBehaviour, IBossController
         Debug.Log("=== BOSS HULK: FASE 2 ACTIVADA ===");
         
         SoundManager.PlaySound(SoundType.BOSS_PHASE_CHANGE);
+        
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = phase2Color;
+            Debug.Log($"[BossHulk] Color cambiado a rojo (Fase 2): {phase2Color}");
+        }
 
         yield return new WaitForSeconds(phaseTransitionDelay);
 

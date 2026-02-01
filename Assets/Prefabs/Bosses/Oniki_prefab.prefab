@@ -214,7 +214,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  phase2HPThreshold: 0
+  phase2HPThreshold: 500
   phaseTransitionDelay: 0
   phase1_chargeTime: 0.7
   phase1_dashSpeed: 18
@@ -232,6 +232,7 @@ MonoBehaviour:
   contactDamage: 100
   hitCooldown: 0.5
   knockbackForceMultiplier: 0.5
+  phase2Color: {r: 1, g: 0, b: 0, a: 1}
 --- !u!61 &6680004740044901353
 BoxCollider2D:
   m_ObjectHideFlags: 0
