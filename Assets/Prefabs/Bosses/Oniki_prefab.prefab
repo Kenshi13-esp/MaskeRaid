@@ -172,7 +172,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.09592725, y: 0.43605542}
+  m_Offset: {x: 0.09592724, y: 0.38025352}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.616279, y: 0}
@@ -182,7 +182,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.90108085, y: 0.4998697}
+  m_Size: {x: 0.90108085, y: 0.6114735}
   m_EdgeRadius: 0
 --- !u!114 &5319632026133929511
 MonoBehaviour:
@@ -196,10 +196,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 10
+  maxHP: 1000
   dashAbilityReward: {fileID: 11400000, guid: 5924de95d00ab6146bd52c4f262ca572, type: 2}
-  deathSoundType: 2
-  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -231,7 +229,7 @@ MonoBehaviour:
   wallsMask:
     serializedVersion: 2
     m_Bits: 2304
-  contactDamage: 50
+  contactDamage: 100
   hitCooldown: 0.5
   knockbackForceMultiplier: 0.5
 --- !u!61 &6680004740044901353
@@ -268,7 +266,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.0950139, y: 0.43463302}
+  m_Offset: {x: 0.09501392, y: 0.38348126}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.616279, y: 0}
@@ -278,7 +276,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.8992542, y: 0.49770463}
+  m_Size: {x: 0.8992542, y: 0.60000813}
   m_EdgeRadius: 0
 --- !u!114 &4839426506427099614
 MonoBehaviour:

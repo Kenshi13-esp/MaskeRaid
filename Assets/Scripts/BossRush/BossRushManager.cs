@@ -17,13 +17,20 @@ public class BossRushManager : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Transform player;
     
+    [Header("Game Over")]
+    [SerializeField] private GameObject gameOverPrefab;
+    [SerializeField] private Vector2 gameOverImageSize = new Vector2(1080f, 870f);
+    
     private PlayerDashController2D playerDashController;
+    private PlayerHealth playerHealth;
+    private GameObject gameOverInstance;
 
     private int currentRoundIndex = 0;
     private int totalBossesDefeated = 0;
     private BossHealth currentBossHealth;
     private GameObject currentBossInstance;
     private int currentBossSequenceIndex = 0;
+    private bool isGameOver = false;
 
     private void Awake()
     {
@@ -34,16 +41,27 @@ public class BossRushManager : MonoBehaviour
             {
                 player = p.transform;
                 playerDashController = p.GetComponent<PlayerDashController2D>();
+                playerHealth = p.GetComponent<PlayerHealth>();
             }
         }
         else
         {
             playerDashController = player.GetComponent<PlayerDashController2D>();
+            playerHealth = player.GetComponent<PlayerHealth>();
         }
         
         if (playerDashController == null)
         {
             Debug.LogError("[BossRushManager] No se encontró PlayerDashController2D en el Player.");
+        }
+        
+        if (playerHealth == null)
+        {
+            Debug.LogError("[BossRushManager] No se encontró PlayerHealth en el Player.");
+        }
+        else
+        {
+            playerHealth.OnPlayerDeath.AddListener(OnPlayerDeath);
         }
     }
 
@@ -66,7 +84,7 @@ public class BossRushManager : MonoBehaviour
 
     private IEnumerator RunBossRush()
     {
-        while (true)
+        while (!isGameOver)
         {
             currentRoundIndex++;
 
@@ -92,9 +110,15 @@ public class BossRushManager : MonoBehaviour
 
             SpawnBoss(bossPrefab);
 
-            while (currentBossHealth != null && !currentBossHealth.IsDead)
+            while (currentBossHealth != null && !currentBossHealth.IsDead && !isGameOver)
             {
                 yield return null;
+            }
+
+            if (isGameOver)
+            {
+                Debug.Log("[BossRushManager] Game Over detectado, deteniendo Boss Rush.");
+                yield break;
             }
 
             totalBossesDefeated++;
@@ -106,6 +130,11 @@ public class BossRushManager : MonoBehaviour
             }
 
             currentBossSequenceIndex++;
+
+            if (playerHealth != null)
+            {
+                playerHealth.HealToFull();
+            }
 
             yield return new WaitForSeconds(afterWinDelay);
         }
@@ -180,6 +209,58 @@ public class BossRushManager : MonoBehaviour
         {
             Debug.LogWarning($"[BossRushManager] El boss '{bossInstance.name}' no implementa IBossController.");
         }
+    }
+
+    private void OnPlayerDeath()
+    {
+        isGameOver = true;
+        Debug.Log($"[BossRushManager] ========== GAME OVER ==========");
+        Debug.Log($"[BossRushManager] Rondas completadas: {currentRoundIndex - 1}");
+        Debug.Log($"[BossRushManager] Bosses derrotados: {totalBossesDefeated}");
+        Debug.Log($"[BossRushManager] ================================");
+        
+        if (player != null)
+        {
+            player.gameObject.SetActive(false);
+        }
+        
+        if (currentBossInstance != null)
+        {
+            var bossController = currentBossInstance.GetComponent<IBossController>();
+            if (bossController != null)
+            {
+                MonoBehaviour bossMono = bossController as MonoBehaviour;
+                if (bossMono != null)
+                {
+                    bossMono.enabled = false;
+                }
+            }
+            
+            currentBossInstance.SetActive(false);
+        }
+        
+        if (gameOverPrefab != null)
+        {
+            gameOverInstance = Instantiate(gameOverPrefab);
+            
+            Transform imageTransform = gameOverInstance.transform.Find("GameOverImage");
+            if (imageTransform != null)
+            {
+                RectTransform rectTransform = imageTransform.GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    rectTransform.sizeDelta = gameOverImageSize;
+                }
+            }
+            
+            Debug.Log("[BossRushManager] Game Over UI mostrado.");
+        }
+        else
+        {
+            Debug.LogWarning("[BossRushManager] gameOverPrefab no está asignado en el Inspector.");
+        }
+        
+        Time.timeScale = 0f;
     }
 }
 

@@ -1015,7 +1015,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71b11bb53d2a6f4499f194e72036b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseDamage: 1
+  baseDamage: 100
 --- !u!1 &744289211
 GameObject:
   m_ObjectHideFlags: 0
@@ -1322,7 +1322,7 @@ MonoBehaviour:
   followTarget: {fileID: 0}
   worldOffset: {x: 0, y: -0.35, z: 0}
   lockRotation: 1
-  hideWhenFull: 1
+  hideWhenFull: 0
   visualRoot: {fileID: 557131592}
   debugLogs: 1
 --- !u!1 &1098487700
@@ -1962,6 +1962,8 @@ MonoBehaviour:
   afterWinDelay: 1
   bossSpawnPoint: {fileID: 41092719}
   player: {fileID: 1878435159}
+  gameOverPrefab: {fileID: 2394403370593164475, guid: 81ce89bf0643c7743b491da3d9153d51, type: 3}
+  gameOverImageSize: {x: 216, y: 160}
 --- !u!1 &1644948941
 GameObject:
   m_ObjectHideFlags: 0
@@ -2429,6 +2431,9 @@ MonoBehaviour:
   jumpHeight: 1.8
   postLandingInvincibility: 0.5
   postDashInvincibilityTime: 0.15
+  OnPlayerDeath:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!61 &1878435162
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2544,7 +2549,7 @@ SpriteRenderer:
   m_Size: {x: 6.4, y: 3.6}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1942714746
