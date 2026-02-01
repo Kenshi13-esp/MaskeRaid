@@ -1793,6 +1793,7 @@ MonoBehaviour:
   player: {fileID: 0}
   gameOverPrefab: {fileID: 2394403370593164475, guid: 81ce89bf0643c7743b491da3d9153d51, type: 3}
   gameOverImageSize: {x: 216, y: 160}
+  exitSprite: {fileID: -7514678078973763014, guid: a10e5a00de1d710429fd156b40075012, type: 3}
 --- !u!1 &1644948941
 GameObject:
   m_ObjectHideFlags: 0
@@ -2163,6 +2164,8 @@ MonoBehaviour:
   dashHitbox: {fileID: 672865535}
   dashVfxSpawnPoint: {fileID: 0}
   bounceMaterial: {fileID: 6200000, guid: 1559867ce6220e941b71c77afad568fc, type: 2}
+  glorboInstructionsSprite: {fileID: 6723029458824175615, guid: 2c66ec73715cddf47b81856a0c59c044, type: 3}
+  onikiInstructionsSprite: {fileID: -7057288059581665361, guid: 6dbc757e6475bda43a3d8c6fa268f2cb, type: 3}
 --- !u!61 &1878435156
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2200,9 +2203,9 @@ BoxCollider2D:
   m_Offset: {x: -0.0048794746, y: 0.18515812}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5135135, y: 0}
-    oldSize: {x: 0.37, y: 0.39}
-    newSize: {x: 0.44, y: 0.38}
+    pivot: {x: 0.5416667, y: 0}
+    oldSize: {x: 0.24, y: 0.45}
+    newSize: {x: 0.24, y: 0.45}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
@@ -2246,7 +2249,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.06, y: -2.949, z: 0.033676192}
-  m_LocalScale: {x: 2.5, y: 2.5, z: 2.5}
+  m_LocalScale: {x: 2.7, y: 2.7, z: 2.7}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 672865533}
@@ -2415,15 +2418,15 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4001420105322281259, guid: be9164c459230594f8965ee0af528ac1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.24, y: 0.45}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &1942714744

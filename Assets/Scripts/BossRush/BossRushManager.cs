@@ -21,9 +21,13 @@ public class BossRushManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPrefab;
     [SerializeField] private Vector2 gameOverImageSize = new Vector2(1080f, 870f);
     
+    [Header("Victory")]
+    [SerializeField] private Sprite exitSprite;
+    
     private PlayerDashController2D playerDashController;
     private PlayerHealth playerHealth;
     private GameObject gameOverInstance;
+    private VictoryHandler victoryHandler;
 
     private int currentRoundIndex = 0;
     private int totalBossesDefeated = 0;
@@ -62,6 +66,13 @@ public class BossRushManager : MonoBehaviour
         else
         {
             playerHealth.OnPlayerDeath.AddListener(OnPlayerDeath);
+        }
+        
+        victoryHandler = gameObject.AddComponent<VictoryHandler>();
+        
+        if (exitSprite != null)
+        {
+            victoryHandler.SetExitSprite(exitSprite);
         }
     }
 
@@ -123,6 +134,23 @@ public class BossRushManager : MonoBehaviour
 
             totalBossesDefeated++;
             Debug.Log($"+++ Boss derrotado: {bossName} (Total: {totalBossesDefeated}) +++");
+            
+            if (bossName.Contains("Qetza"))
+            {
+                Debug.Log($"[BossRushManager] ¡VICTORIA! Boss Qetza derrotado. ¡Has ganado!");
+                
+                if (currentBossInstance != null)
+                {
+                    Destroy(currentBossInstance);
+                }
+                
+                if (victoryHandler != null)
+                {
+                    victoryHandler.TriggerVictory();
+                }
+                
+                yield break;
+            }
 
             if (currentBossInstance != null)
             {

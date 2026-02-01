@@ -43,8 +43,15 @@ public class PlayerDashController2D : MonoBehaviour
     [Header("Bounce Physics Material")]
     [Tooltip("Material de física para rebotes (usar JellyBounce)")]
     [SerializeField] private PhysicsMaterial2D bounceMaterial;
+    
+    [Header("Instructions")]
+    [Tooltip("Sprite de instrucciones para mostrar al obtener poder de Glorbo")]
+    [SerializeField] private Sprite glorboInstructionsSprite;
+    [Tooltip("Sprite de instrucciones para mostrar al obtener poder de Oniki")]
+    [SerializeField] private Sprite onikiInstructionsSprite;
 
     private DashAbility currentDashAbility;
+    private InstructionsHandler instructionsHandler;
     
     private Rigidbody2D rb;
     private PhysicsMaterial2D originalMaterial;
@@ -109,6 +116,8 @@ public class PlayerDashController2D : MonoBehaviour
         {
             Debug.LogWarning("[PlayerDash] No se asignó defaultDashAbility. El dash no funcionará correctamente.");
         }
+        
+        instructionsHandler = gameObject.AddComponent<InstructionsHandler>();
 
         CacheEnemyColliders();
     }
@@ -548,11 +557,23 @@ public class PlayerDashController2D : MonoBehaviour
             {
                 animator.runtimeAnimatorController = onikiAnimatorController;
                 Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Oniki (HulkDash)!");
+                
+                if (instructionsHandler != null && onikiInstructionsSprite != null)
+                {
+                    instructionsHandler.SetInstructionsSprite(onikiInstructionsSprite);
+                    instructionsHandler.ShowInstructions();
+                }
             }
             else if (newAbility.EnableWallBounce && glorboAnimatorController != null)
             {
                 animator.runtimeAnimatorController = glorboAnimatorController;
                 Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Glorbo!");
+                
+                if (instructionsHandler != null && glorboInstructionsSprite != null)
+                {
+                    instructionsHandler.SetInstructionsSprite(glorboInstructionsSprite);
+                    instructionsHandler.ShowInstructions();
+                }
             }
         }
         

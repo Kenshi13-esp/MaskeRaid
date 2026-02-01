@@ -1846,6 +1846,7 @@ MonoBehaviour:
   player: {fileID: 1878435159}
   gameOverPrefab: {fileID: 2394403370593164475, guid: 81ce89bf0643c7743b491da3d9153d51, type: 3}
   gameOverImageSize: {x: 216, y: 160}
+  exitSprite: {fileID: -7514678078973763014, guid: a10e5a00de1d710429fd156b40075012, type: 3}
 --- !u!1 &1644948941
 GameObject:
   m_ObjectHideFlags: 0
@@ -2138,6 +2139,8 @@ MonoBehaviour:
   dashHitbox: {fileID: 672865535}
   dashVfxSpawnPoint: {fileID: 45689051}
   bounceMaterial: {fileID: 0}
+  glorboInstructionsSprite: {fileID: 6723029458824175615, guid: 2c66ec73715cddf47b81856a0c59c044, type: 3}
+  onikiInstructionsSprite: {fileID: -7057288059581665361, guid: 6dbc757e6475bda43a3d8c6fa268f2cb, type: 3}
 --- !u!50 &1878435157
 Rigidbody2D:
   serializedVersion: 5
