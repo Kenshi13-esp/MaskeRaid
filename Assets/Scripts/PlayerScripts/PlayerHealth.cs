@@ -13,12 +13,17 @@ public class PlayerHealth : MonoBehaviour
     [Header("Post-Dash Invincibility")]
     [Tooltip("Tiempo de invulnerabilidad después del dash (segundos). 0.15 = ~9 frames a 60fps")]
     [SerializeField] private float postDashInvincibilityTime = 0.15f;
+    
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
 
     private int hp;
     private Rigidbody2D rb;
     private PlayerDashController2D dashController;
     private SpriteRenderer spriteRenderer;
     private Transform spriteTransform;
+    
+    private static readonly int HitHash = Animator.StringToHash("Hit");
 
     private bool isLaunched = false;
     private bool isInvincible = false;
@@ -33,6 +38,9 @@ public class PlayerHealth : MonoBehaviour
         dashController = GetComponent<PlayerDashController2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer != null) spriteTransform = spriteRenderer.transform;
+        
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
     }
 
     public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier, bool ignoreInvincibility = false)
@@ -43,6 +51,9 @@ public class PlayerHealth : MonoBehaviour
         hp = Mathf.Max(0, hp);
         
         SoundManager.PlaySound(SoundType.PLAYER_HIT);
+        
+        if (animator != null)
+            animator.SetTrigger(HitHash);
 
         StopAllCoroutines();
         StartCoroutine(ParabolicLaunch(knockbackDir));
