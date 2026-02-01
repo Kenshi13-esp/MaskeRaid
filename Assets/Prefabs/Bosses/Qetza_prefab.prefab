@@ -239,8 +239,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHP: 10
   dashAbilityReward: {fileID: 0}
-  deathSoundType: 10
-  playDeathSound: 1
   OnBossDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -282,7 +280,7 @@ MonoBehaviour:
   offsetAnimationTransform: {fileID: 0}
   arenaPaddingFromWalls: 2
   phaseTwoColor: {r: 1, g: 0, b: 0, a: 1}
-  phaseTwoSpeedMultiplier: 1.4
+  phaseTwoSpeedMultiplier: 1.6
   phaseTwoHealthPercent: 0.5
   shadowPrefab: {fileID: 1215342892149415719, guid: 7515e5964def13d4e9b0d6e35225aadf, type: 3}
   shadowMarkerName: Quetza_Shadow
