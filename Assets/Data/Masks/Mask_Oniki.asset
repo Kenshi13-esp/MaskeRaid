@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3857b3d1c6008147aef9c494e07c6dd, type: 3}
+  m_Name: Mask_Oniki
+  m_EditorClassIdentifier: 
+  maskName: Mascara de Oniki
+  description: Embestida pesada con dano doble, igual que el ataque de Oniki.
+  maskSprite: {fileID: 0}
+  dashMoveKind: 1
+  dashProfile: {fileID: 11400000, guid: 5924de95d00ab6146bd52c4f262ca572, type: 2}
+  animatorController: {fileID: 9100000, guid: d8033f533b7206d4a8dc91054f74cea9, type: 2}
+  instructionsSprite: {fileID: -7057288059581665361, guid: 6dbc757e6475bda43a3d8c6fa268f2cb, type: 3}

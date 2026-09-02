@@ -1,81 +1,78 @@
-using UnityEngine;
-using UnityEngine.UI;
+using System.Collections;
 using TMPro;
+using UnityEngine;
 
+/// <summary>
+/// Aviso en pantalla al equipar una mascara nueva. Reacciona al evento del
+/// <see cref="PlayerMaskController"/> en lugar de comprobar el estado cada frame.
+/// </summary>
 public class PowerDisplay : MonoBehaviour
 {
     [Header("Referencias")]
-    [SerializeField] private PlayerDashController2D playerDashController;
-    
-    [Header("UI Elements")]
-    [SerializeField] private TextMeshProUGUI powerNameText;
-    [SerializeField] private TextMeshProUGUI powerDescriptionText;
+    [Tooltip("Vacio = se busca el jugador por tag")]
+    [SerializeField] private PlayerMaskController playerMaskController;
+
+    [Header("UI")]
+    [SerializeField] private TextMeshProUGUI maskNameText;
+    [SerializeField] private TextMeshProUGUI maskDescriptionText;
     [SerializeField] private CanvasGroup canvasGroup;
-    
-    [Header("Configuración")]
+
+    [Header("Configuracion")]
     [SerializeField] private float displayDuration = 3f;
     [SerializeField] private float fadeSpeed = 2f;
-    
-    private DashAbility lastAbility;
-    private float displayTimer;
-    private bool isShowing;
 
-    private void Start()
+    private Coroutine displayRoutine;
+
+    private void Awake()
     {
-        if (canvasGroup != null)
+        if (playerMaskController == null)
         {
-            canvasGroup.alpha = 0f;
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) playerMaskController = player.GetComponent<PlayerMaskController>();
         }
+
+        if (canvasGroup != null) canvasGroup.alpha = 0f;
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        if (playerDashController == null) return;
-        
-        DashAbility currentAbility = playerDashController.GetCurrentDashAbility();
-        
-        if (currentAbility != null && currentAbility != lastAbility)
-        {
-            ShowPowerNotification(currentAbility);
-            lastAbility = currentAbility;
-        }
-        
-        if (isShowing)
-        {
-            displayTimer -= Time.deltaTime;
-            
-            if (canvasGroup != null)
-            {
-                if (displayTimer > 0f)
-                {
-                    canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 1f, fadeSpeed * Time.deltaTime);
-                }
-                else
-                {
-                    canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 0f, fadeSpeed * Time.deltaTime);
-                    
-                    if (canvasGroup.alpha <= 0f)
-                    {
-                        isShowing = false;
-                    }
-                }
-            }
-        }
+        if (playerMaskController != null) playerMaskController.MaskEquipped += OnMaskEquipped;
     }
 
-    private void ShowPowerNotification(DashAbility ability)
+    private void OnDisable()
     {
-        if (powerNameText != null)
+        if (playerMaskController != null) playerMaskController.MaskEquipped -= OnMaskEquipped;
+    }
+
+    private void OnMaskEquipped(MaskDefinition mask)
+    {
+        if (mask == null) return;
+
+        if (maskNameText != null) maskNameText.text = $"NUEVA MASCARA: {mask.MaskName}";
+        if (maskDescriptionText != null) maskDescriptionText.text = mask.Description;
+
+        if (canvasGroup == null) return;
+
+        if (displayRoutine != null) StopCoroutine(displayRoutine);
+        displayRoutine = StartCoroutine(DisplayRoutine());
+    }
+
+    private IEnumerator DisplayRoutine()
+    {
+        while (canvasGroup.alpha < 1f)
         {
-            powerNameText.text = $"¡NUEVO PODER: {ability.AbilityName}!";
+            canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 1f, fadeSpeed * Time.unscaledDeltaTime);
+            yield return null;
         }
-        
-        if (powerDescriptionText != null)
+
+        yield return new WaitForSecondsRealtime(displayDuration);
+
+        while (canvasGroup.alpha > 0f)
         {
-            powerDescriptionText.text = ability.Description;
+            canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 0f, fadeSpeed * Time.unscaledDeltaTime);
+            yield return null;
         }
-        
-        displayTimer = displayDuration;
-        isShowing = true;
+
+        displayRoutine = null;
     }
 }

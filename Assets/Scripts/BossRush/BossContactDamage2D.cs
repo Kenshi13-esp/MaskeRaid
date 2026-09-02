@@ -1,38 +1,37 @@
 using UnityEngine;
 
+/// <summary>
+/// Dano por contacto de un boss (o de una de sus hitbox hijas) al jugador, con cooldown
+/// propio. Delega en <see cref="PlayerContact"/> para no resolver componentes ni escribir
+/// trazas en cada fotograma de fisica que dura el contacto.
+/// </summary>
 public class BossContactDamage2D : MonoBehaviour
 {
+    [Header("Contact Damage")]
     [SerializeField] private int damage = 1;
     [SerializeField] private float hitCooldown = 0.5f;
+    [SerializeField] private float knockbackForceMultiplier = 1f;
 
-    private float lastHitTime;
+    private float lastHitTime = float.NegativeInfinity;
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        TryDealDamage(other);
+    }
 
     private void OnTriggerStay2D(Collider2D other)
     {
+        TryDealDamage(other);
+    }
+
+    private void TryDealDamage(Collider2D other)
+    {
         if (Time.time < lastHitTime + hitCooldown) return;
+        if (!PlayerContact.TryGetDamageablePlayer(other, out PlayerHealth playerHealth)) return;
 
-        // Da�o al PLAYER
-        if (other.CompareTag("Player"))
-        {
-            PlayerDashController2D dashController = other.GetComponent<PlayerDashController2D>();
-            if (dashController != null && dashController.IsDashing)
-            {
-                Debug.Log("[BossContactDamage2D] Player está dasheando, no hace daño");
-                return;
-            }
+        lastHitTime = Time.time;
 
-            PlayerHealth ph = other.GetComponent<PlayerHealth>();
-            if (ph != null)
-            {
-                Vector2 knockbackDir = (other.transform.position - transform.position).normalized;
-                ph.TakeDamage(damage, knockbackDir, 1f);
-                lastHitTime = Time.time;
-                Debug.Log($"[BossContactDamage2D] Daño aplicado al player: {damage}");
-            }
-            else
-            {
-                Debug.LogWarning($"[BossContactDamage2D] Player sin componente PlayerHealth");
-            }
-        }
+        Vector2 knockbackDirection = PlayerContact.ResolveKnockbackDirection(transform.position, other.transform.position);
+        playerHealth.TakeDamage(damage, knockbackDirection, knockbackForceMultiplier);
     }
 }

@@ -2,9 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Orquesta el boss rush: instancia los bosses en orden, entrega su mascara al jugador al
+/// derrotarlos y gestiona la victoria y el game over.
+/// </summary>
 public class BossRushManager : MonoBehaviour
 {
+    private const string FinalBossNameToken = "Qetza";
+
     [Header("Boss Pool")]
+    [Tooltip("Bosses en el orden en el que apareceran")]
     [SerializeField] private List<GameObject> bossPrefabs = new List<GameObject>();
 
     [Header("Rush Settings")]
@@ -16,82 +23,89 @@ public class BossRushManager : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private Transform player;
-    
+
     [Header("Game Over")]
     [SerializeField] private GameObject gameOverPrefab;
     [SerializeField] private Vector2 gameOverImageSize = new Vector2(1080f, 870f);
-    
+
     [Header("Victory")]
     [SerializeField] private Sprite exitSprite;
-    
-    private PlayerDashController2D playerDashController;
+
+    private PlayerMaskController playerMaskController;
     private PlayerHealth playerHealth;
     private GameObject gameOverInstance;
     private VictoryHandler victoryHandler;
     private GameObject gameSceneUI;
 
-    private int currentRoundIndex = 0;
-    private int totalBossesDefeated = 0;
+    private int currentRoundIndex;
+    private int totalBossesDefeated;
+    private int currentBossSequenceIndex;
+    private bool isGameOver;
+
     private BossHealth currentBossHealth;
     private GameObject currentBossInstance;
-    private int currentBossSequenceIndex = 0;
-    private bool isGameOver = false;
 
     private void Awake()
     {
-        if (player == null)
-        {
-            GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null)
-            {
-                player = p.transform;
-                playerDashController = p.GetComponent<PlayerDashController2D>();
-                playerHealth = p.GetComponent<PlayerHealth>();
-            }
-        }
-        else
-        {
-            playerDashController = player.GetComponent<PlayerDashController2D>();
-            playerHealth = player.GetComponent<PlayerHealth>();
-        }
-        
-        if (playerDashController == null)
-        {
-            Debug.LogError("[BossRushManager] No se encontró PlayerDashController2D en el Player.");
-        }
-        
-        if (playerHealth == null)
-        {
-            Debug.LogError("[BossRushManager] No se encontró PlayerHealth en el Player.");
-        }
-        else
-        {
-            playerHealth.OnPlayerDeath.AddListener(OnPlayerDeath);
-        }
-        
+        ResolvePlayerReferences();
+
         victoryHandler = gameObject.AddComponent<VictoryHandler>();
-        
-        if (exitSprite != null)
-        {
-            victoryHandler.SetExitSprite(exitSprite);
-        }
+
+        if (exitSprite != null) victoryHandler.SetExitSprite(exitSprite);
     }
 
     private void Start()
     {
         if (bossSpawnPoint == null)
         {
-            Debug.LogError("[BossRushManager] Falta bossSpawnPoint.");
+            Debug.LogError("[BossRushManager] Falta bossSpawnPoint.", this);
             return;
         }
 
         if (bossPrefabs == null || bossPrefabs.Count == 0)
         {
-            Debug.LogError("[BossRushManager] bossPrefabs está vacío. Agrega prefabs de bosses a la lista.");
+            Debug.LogError("[BossRushManager] bossPrefabs esta vacio.", this);
             return;
         }
 
         StartCoroutine(RunBossRush());
+    }
+
+    private void OnDestroy()
+    {
+        if (playerHealth != null) playerHealth.OnPlayerDeath.RemoveListener(OnPlayerDeath);
+        if (gameSceneUI != null) gameSceneUI.SetActive(true);
+    }
+
+    private void ResolvePlayerReferences()
+    {
+        if (player == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null) player = playerObject.transform;
+        }
+
+        if (player == null)
+        {
+            Debug.LogError("[BossRushManager] No se encontro el Player en la escena.", this);
+            return;
+        }
+
+        playerMaskController = player.GetComponent<PlayerMaskController>();
+        playerHealth = player.GetComponent<PlayerHealth>();
+
+        if (playerMaskController == null)
+        {
+            Debug.LogError("[BossRushManager] El Player no tiene PlayerMaskController.", this);
+        }
+
+        if (playerHealth == null)
+        {
+            Debug.LogError("[BossRushManager] El Player no tiene PlayerHealth.", this);
+            return;
+        }
+
+        playerHealth.OnPlayerDeath.AddListener(OnPlayerDeath);
     }
 
     private IEnumerator RunBossRush()
@@ -100,23 +114,18 @@ public class BossRushManager : MonoBehaviour
         {
             currentRoundIndex++;
 
-            if (currentBossSequenceIndex >= bossPrefabs.Count)
-            {
-                Debug.Log($"=== CICLO COMPLETADO: Todos los {bossPrefabs.Count} bosses derrotados. Reiniciando secuencia... ===");
-                currentBossSequenceIndex = 0;
-            }
+            if (currentBossSequenceIndex >= bossPrefabs.Count) currentBossSequenceIndex = 0;
 
             GameObject bossPrefab = bossPrefabs[currentBossSequenceIndex];
 
             if (bossPrefab == null)
             {
-                Debug.LogError($"[BossRushManager] Boss en índice {currentBossSequenceIndex} es null.");
+                Debug.LogError($"[BossRushManager] El boss del indice {currentBossSequenceIndex} es null.", this);
                 currentBossSequenceIndex++;
                 continue;
             }
 
             string bossName = bossPrefab.name;
-            Debug.Log($"=== RONDA {currentRoundIndex}: {bossName} (Boss #{currentBossSequenceIndex + 1}/{bossPrefabs.Count}) ===");
 
             yield return new WaitForSeconds(introDelay);
 
@@ -127,43 +136,21 @@ public class BossRushManager : MonoBehaviour
                 yield return null;
             }
 
-            if (isGameOver)
-            {
-                Debug.Log("[BossRushManager] Game Over detectado, deteniendo Boss Rush.");
-                yield break;
-            }
+            if (isGameOver) yield break;
 
             totalBossesDefeated++;
-            Debug.Log($"+++ Boss derrotado: {bossName} (Total: {totalBossesDefeated}) +++");
-            
-            if (bossName.Contains("Qetza"))
+
+            if (bossName.Contains(FinalBossNameToken))
             {
-                Debug.Log($"[BossRushManager] ¡VICTORIA! Boss Qetza derrotado. ¡Has ganado!");
-                
-                if (currentBossInstance != null)
-                {
-                    Destroy(currentBossInstance);
-                }
-                
-                if (victoryHandler != null)
-                {
-                    victoryHandler.TriggerVictory();
-                }
-                
+                TriggerVictory();
                 yield break;
             }
 
-            if (currentBossInstance != null)
-            {
-                Destroy(currentBossInstance);
-            }
+            if (currentBossInstance != null) Destroy(currentBossInstance);
 
             currentBossSequenceIndex++;
 
-            if (playerHealth != null)
-            {
-                playerHealth.HealToFull();
-            }
+            if (playerHealth != null) playerHealth.HealToFull();
 
             yield return new WaitForSeconds(afterWinDelay);
         }
@@ -171,141 +158,112 @@ public class BossRushManager : MonoBehaviour
 
     private void SpawnBoss(GameObject bossPrefab)
     {
-        if (currentBossInstance != null)
-        {
-            Destroy(currentBossInstance);
-        }
+        if (currentBossInstance != null) Destroy(currentBossInstance);
 
         currentBossInstance = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
 
         PlaySpawnSound(bossPrefab.name);
 
         currentBossHealth = currentBossInstance.GetComponent<BossHealth>();
+
         if (currentBossHealth == null)
         {
-            Debug.LogError("[BossRushManager] El bossPrefab NO tiene BossHealth. Añádelo al prefab.");
+            Debug.LogError($"[BossRushManager] El prefab '{bossPrefab.name}' no tiene BossHealth.", this);
             return;
         }
 
         currentBossHealth.ResetHealth();
-        
+
         currentBossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
         currentBossHealth.OnBossDeath.AddListener(OnBossDefeated);
 
         ActivateBoss(currentBossInstance);
     }
-    
+
     private void PlaySpawnSound(string prefabName)
     {
-        if (prefabName.Contains("Glorbo"))
-        {
-            SoundManager.PlaySound(SoundType.GLORBO_SPAWN);
-        }
-        else if (prefabName.Contains("Oniki") || prefabName.Contains("Oni"))
-        {
-            SoundManager.PlaySound(SoundType.ONI_SPAWN);
-        }
-        else if (prefabName.Contains("Qetza"))
-        {
-            SoundManager.PlaySound(SoundType.QETZA_SPAWN);
-        }
+        if (prefabName.Contains("Glorbo")) SoundManager.PlaySound(SoundType.GLORBO_SPAWN);
+        else if (prefabName.Contains("Oni")) SoundManager.PlaySound(SoundType.ONI_SPAWN);
+        else if (prefabName.Contains(FinalBossNameToken)) SoundManager.PlaySound(SoundType.QETZA_SPAWN);
     }
-    
-    private void OnBossDefeated(DashAbility dashAbility)
+
+    private void OnBossDefeated(MaskDefinition mask)
     {
-        Debug.Log($"[BossRushManager] ¡Boss derrotado! Otorgando poder: {dashAbility?.AbilityName ?? "null"}");
-        
-        if (dashAbility != null && playerDashController != null)
-        {
-            playerDashController.SetDashAbility(dashAbility);
-        }
-        else if (playerDashController == null)
-        {
-            Debug.LogWarning("[BossRushManager] No se puede otorgar poder: PlayerDashController es null.");
-        }
-        
-        totalBossesDefeated++;
+        if (mask == null || playerMaskController == null) return;
+
+        playerMaskController.EquipMask(mask);
     }
 
     private void ActivateBoss(GameObject bossInstance)
     {
-        var bossController = bossInstance.GetComponent<IBossController>();
-        if (bossController != null)
+        IBossController bossController = bossInstance.GetComponent<IBossController>();
+
+        if (bossController == null)
         {
-            bossController.ActivateBoss();
+            Debug.LogWarning($"[BossRushManager] '{bossInstance.name}' no implementa IBossController.", this);
+            return;
         }
-        else
-        {
-            Debug.LogWarning($"[BossRushManager] El boss '{bossInstance.name}' no implementa IBossController.");
-        }
+
+        bossController.ActivateBoss();
+    }
+
+    private void TriggerVictory()
+    {
+        if (currentBossInstance != null) Destroy(currentBossInstance);
+
+        if (victoryHandler != null) victoryHandler.TriggerVictory();
     }
 
     private void OnPlayerDeath()
     {
+        if (isGameOver) return;
+
         isGameOver = true;
-        Debug.Log($"[BossRushManager] ========== GAME OVER ==========");
-        Debug.Log($"[BossRushManager] Rondas completadas: {currentRoundIndex - 1}");
-        Debug.Log($"[BossRushManager] Bosses derrotados: {totalBossesDefeated}");
-        Debug.Log($"[BossRushManager] ================================");
-        
-        if (player != null)
-        {
-            player.gameObject.SetActive(false);
-        }
-        
-        if (currentBossInstance != null)
-        {
-            var bossController = currentBossInstance.GetComponent<IBossController>();
-            if (bossController != null)
-            {
-                MonoBehaviour bossMono = bossController as MonoBehaviour;
-                if (bossMono != null)
-                {
-                    bossMono.enabled = false;
-                }
-            }
-            
-            currentBossInstance.SetActive(false);
-        }
-        
-        GameObject uiObject = GameObject.Find("UI");
-        if (uiObject != null)
-        {
-            gameSceneUI = uiObject;
-            gameSceneUI.SetActive(false);
-            Debug.Log("[BossRushManager] UI de GameScene desactivado.");
-        }
-        
-        if (gameOverPrefab != null)
-        {
-            gameOverInstance = Instantiate(gameOverPrefab);
-            
-            Transform imageTransform = gameOverInstance.transform.Find("GameOverImage");
-            if (imageTransform != null)
-            {
-                RectTransform rectTransform = imageTransform.GetComponent<RectTransform>();
-                if (rectTransform != null)
-                {
-                    rectTransform.sizeDelta = gameOverImageSize;
-                }
-            }
-            
-            Debug.Log("[BossRushManager] Game Over UI mostrado.");
-        }
-        else
-        {
-            Debug.LogWarning("[BossRushManager] gameOverPrefab no está asignado en el Inspector.");
-        }
-        
-        Time.timeScale = 0f;
+
+        Debug.Log($"[BossRushManager] GAME OVER. Rondas: {currentRoundIndex - 1}. Bosses derrotados: {totalBossesDefeated}.");
+
+        if (player != null) player.gameObject.SetActive(false);
+
+        DisableCurrentBoss();
+        HideGameplayUI();
+        ShowGameOverScreen();
+
+        GamePause.SetGameFinished(true);
     }
-    
-    private void OnDestroy()
+
+    private void DisableCurrentBoss()
     {
-        if (gameSceneUI != null)
+        if (currentBossInstance == null) return;
+
+        MonoBehaviour bossController = currentBossInstance.GetComponent<IBossController>() as MonoBehaviour;
+        if (bossController != null) bossController.enabled = false;
+
+        currentBossInstance.SetActive(false);
+    }
+
+    private void HideGameplayUI()
+    {
+        GameObject uiObject = GameObject.Find("UI");
+        if (uiObject == null) return;
+
+        gameSceneUI = uiObject;
+        gameSceneUI.SetActive(false);
+    }
+
+    private void ShowGameOverScreen()
+    {
+        if (gameOverPrefab == null)
         {
-            gameSceneUI.SetActive(true);
+            Debug.LogWarning("[BossRushManager] gameOverPrefab no esta asignado.", this);
+            return;
         }
+
+        gameOverInstance = Instantiate(gameOverPrefab);
+
+        Transform imageTransform = gameOverInstance.transform.Find("GameOverImage");
+        if (imageTransform == null) return;
+
+        RectTransform imageRect = imageTransform.GetComponent<RectTransform>();
+        if (imageRect != null) imageRect.sizeDelta = gameOverImageSize;
     }
 }
-

@@ -1,82 +1,60 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
+/// <summary>
+/// Utilidad de depuracion: imprime la mascara equipada al pulsar una tecla y avisa cuando el
+/// jugador consigue una nueva.
+/// </summary>
 public class PowerDebugger : MonoBehaviour
 {
-    [SerializeField] private PlayerDashController2D playerDashController;
-    
-    private DashAbility lastAbility;
-    private float checkInterval = 0.5f;
-    private float nextCheckTime;
+    [Header("Referencias")]
+    [SerializeField] private PlayerMaskController playerMaskController;
 
-    private void Start()
+    [Header("Debug")]
+    [Tooltip("Tecla que imprime la mascara equipada por consola")]
+    [SerializeField] private Key inspectKey = Key.P;
+
+    private void Awake()
     {
-        if (playerDashController == null)
-        {
-            playerDashController = GetComponent<PlayerDashController2D>();
-        }
-        
-        nextCheckTime = Time.time + checkInterval;
+        if (playerMaskController == null) playerMaskController = GetComponent<PlayerMaskController>();
+    }
+
+    private void OnEnable()
+    {
+        if (playerMaskController != null) playerMaskController.MaskEquipped += LogMask;
+    }
+
+    private void OnDisable()
+    {
+        if (playerMaskController != null) playerMaskController.MaskEquipped -= LogMask;
     }
 
     private void Update()
     {
-        if (Time.time >= nextCheckTime)
-        {
-            nextCheckTime = Time.time + checkInterval;
-            CheckForPowerChange();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-            ShowCurrentPower();
-        }
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null || playerMaskController == null) return;
+
+        if (keyboard[inspectKey].wasPressedThisFrame) LogMask(playerMaskController.CurrentMask);
     }
 
-    private void CheckForPowerChange()
+    private void LogMask(MaskDefinition mask)
     {
-        if (playerDashController == null) return;
-        
-        DashAbility currentAbility = playerDashController.GetCurrentDashAbility();
-        
-        if (currentAbility != null && currentAbility != lastAbility)
+        if (mask == null)
         {
-            ShowPowerChange(currentAbility);
-            lastAbility = currentAbility;
+            Debug.LogWarning("[PowerDebugger] No hay mascara equipada.");
+            return;
         }
-    }
 
-    private void ShowPowerChange(DashAbility ability)
-    {
-        Debug.Log("═══════════════════════════════════════════");
-        Debug.Log($"🎉 ¡NUEVO PODER OBTENIDO! 🎉");
-        Debug.Log($"📛 {ability.AbilityName}");
-        Debug.Log($"📝 {ability.Description}");
-        Debug.Log("───────────────────────────────────────────");
-        Debug.Log($"⚡ Dashes en combo: {ability.ComboDashes}");
-        Debug.Log($"⏱️ Tiempo de carga: {ability.MaxChargeTime}s");
-        Debug.Log($"⏰ Cooldown: {ability.DashCooldownAfterCombo}s");
-        Debug.Log($"📏 Distancia: {ability.MinDashDistance}-{ability.MaxDashDistance}");
-        Debug.Log($"💥 Multiplicador daño: x{ability.DamageMultiplier}");
-        Debug.Log("═══════════════════════════════════════════");
-    }
+        DashProfile profile = mask.DashProfile;
 
-    private void ShowCurrentPower()
-    {
-        if (playerDashController == null) return;
-        
-        DashAbility currentAbility = playerDashController.GetCurrentDashAbility();
-        
-        if (currentAbility != null)
+        if (profile == null)
         {
-            Debug.Log("═══════════════════════════════════════════");
-            Debug.Log($"📊 PODER ACTUAL:");
-            Debug.Log($"📛 {currentAbility.AbilityName}");
-            Debug.Log($"⚡ Dashes: {currentAbility.ComboDashes} | Carga: {currentAbility.MaxChargeTime}s | CD: {currentAbility.DashCooldownAfterCombo}s");
-            Debug.Log("═══════════════════════════════════════════");
+            Debug.LogWarning($"[PowerDebugger] La mascara '{mask.MaskName}' no tiene DashProfile.");
+            return;
         }
-        else
-        {
-            Debug.LogWarning("No hay poder activo");
-        }
+
+        Debug.Log($"[PowerDebugger] {mask.MaskName} | dash: {mask.DashMoveKind} | combo: {profile.ComboDashes} | " +
+                  $"carga: {profile.MaxChargeTime}s | cooldown: {profile.DashCooldownAfterCombo}s | " +
+                  $"distancia: {profile.MinDashDistance}-{profile.MaxDashDistance} | dano x{profile.DamageMultiplier}");
     }
 }

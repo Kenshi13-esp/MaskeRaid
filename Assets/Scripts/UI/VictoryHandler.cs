@@ -30,7 +30,7 @@ public class VictoryHandler : MonoBehaviour
         
         SoundManager.PlaySound(SoundType.VICTORY);
         
-        Time.timeScale = 0f;
+        GamePause.SetGameFinished(true);
         
         DisableGameSceneUI();
         
@@ -102,7 +102,7 @@ public class VictoryHandler : MonoBehaviour
         
         Debug.Log("[VictoryHandler] Cargando Main Menu...");
         
-        Time.timeScale = 1f;
+        GamePause.ResetState();
         
         if (victoryCanvasInstance != null)
         {

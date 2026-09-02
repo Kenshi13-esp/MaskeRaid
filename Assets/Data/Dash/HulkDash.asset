@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 699dfa5e0bd7401489b40c46ee7d8aa6, type: 3}
+  m_Name: HulkDash
+  m_EditorClassIdentifier: 
+  maxChargeTime: 0.8
+  dashDuration: 0.1
+  useFixedSpeed: 0
+  dashSpeed: 18
+  minDashDistance: 3.5
+  maxDashDistance: 9
+  stopDistanceFromTarget: 0.5
+  pierceWalls: 0
+  wallStopSkin: 0.4
+  comboDashes: 1
+  dashCooldownAfterCombo: 1
+  damageMultiplier: 2
+  maxBounces: 6
+  minSpeedAfterBounce: 12
+  maxSpeedClamp: 18
+  bounceMaterial: {fileID: 0}
+  cameraShakeDuration: 0.15
+  cameraShakeMagnitude: 0.2
+  dashAnimatorTrigger: Dash
+  endAnimatorTrigger: 
+  dashSoundType: 1
+  dashVfxPrefab: {fileID: 201986757626793169, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
+  dashVfxLifetime: 1

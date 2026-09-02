@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 97567028}
   - component: {fileID: 97567027}
   - component: {fileID: 97567026}
+  - component: {fileID: 97567029}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -198,6 +199,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &97567029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 97567025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e913cb08168c7d94a9d5e6aa132bfcfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputModule: {fileID: 0}
+  disableNavigationWithoutMenus: 1
+  keepSelectionOnBackgroundClick: 1
 --- !u!1 &152350598
 GameObject:
   m_ObjectHideFlags: 0
@@ -286,10 +302,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1978119793}
+    m_SelectOnDown: {fileID: 1390897736}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -568,7 +584,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -837,12 +853,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1390897736}
+    m_SelectOnDown: {fileID: 1978119793}
     m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnRight: {fileID: 1978119793}
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 0.8773585, g: 0.8773585, b: 0.8773585, a: 1}
@@ -1023,6 +1039,7 @@ GameObject:
   - component: {fileID: 815370420}
   - component: {fileID: 815370419}
   - component: {fileID: 815370423}
+  - component: {fileID: 815370424}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -1174,6 +1191,22 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &815370424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 815370418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 612f6a0ad878ff34ab5f21d04f07a711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 339028315}
+  restorePreviousSelection: 1
+  deactivateOnBack: 0
+  blockNavigationOutside: 0
 --- !u!1 &991215213
 GameObject:
   m_ObjectHideFlags: 0
@@ -1548,10 +1581,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 339028317}
+    m_SelectOnDown: {fileID: 640031089}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -1640,6 +1673,7 @@ GameObject:
   - component: {fileID: 1556828601}
   - component: {fileID: 1556828603}
   - component: {fileID: 1556828602}
+  - component: {fileID: 1556828604}
   m_Layer: 5
   m_Name: ControlsPage
   m_TagString: Untagged
@@ -1705,6 +1739,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1556828600}
   m_CullTransparentMesh: 1
+--- !u!114 &1556828604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556828600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 612f6a0ad878ff34ab5f21d04f07a711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 479111991}
+  restorePreviousSelection: 1
+  deactivateOnBack: 1
+  blockNavigationOutside: 1
 --- !u!1 &1697099367
 GameObject:
   m_ObjectHideFlags: 0
@@ -1851,6 +1901,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1805552296}
   - component: {fileID: 1805552297}
+  - component: {fileID: 1805552298}
   m_Layer: 5
   m_Name: SliderVolume
   m_TagString: Untagged
@@ -1893,10 +1944,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnDown: {fileID: 1978119793}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -1931,6 +1982,22 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1805552298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1805552295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 612f6a0ad878ff34ab5f21d04f07a711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 1805552295}
+  restorePreviousSelection: 1
+  deactivateOnBack: 1
+  blockNavigationOutside: 0
 --- !u!1 &1975468436
 GameObject:
   m_ObjectHideFlags: 0
@@ -2082,11 +2149,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnUp: {fileID: 640031089}
+    m_SelectOnDown: {fileID: 339028317}
+    m_SelectOnLeft: {fileID: 640031089}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:

@@ -1,44 +1,47 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Hitbox del dash del jugador. Solo hace dano mientras el dash esta activo y como maximo
+/// una vez por boss y por dash.
+/// </summary>
 public class DashHitbox2D : MonoBehaviour
 {
     [Header("Damage")]
     [SerializeField] private int baseDamage = 1;
-    private bool active;
+
+    private readonly HashSet<int> bossesHitThisDash = new HashSet<int>();
+
+    private bool isActive;
     private float currentDamageMultiplier = 1f;
 
-    private readonly HashSet<int> hitThisDash = new HashSet<int>();
-
-    public void BeginDash(int dashSerial, float damageMultiplier = 1f)
+    /// <summary>Abre la ventana de dano del dash con el multiplicador del perfil activo.</summary>
+    public void BeginDash(float damageMultiplier = 1f)
     {
-        active = true;
+        isActive = true;
         currentDamageMultiplier = damageMultiplier;
-        hitThisDash.Clear();
+        bossesHitThisDash.Clear();
     }
 
+    /// <summary>Cierra la ventana de dano del dash.</summary>
     public void EndDash()
     {
-        active = false;
+        isActive = false;
         currentDamageMultiplier = 1f;
-        hitThisDash.Clear();
+        bossesHitThisDash.Clear();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!active) return;
+        if (!isActive) return;
 
         BossHealth boss = other.GetComponentInParent<BossHealth>();
-        if (boss != null && !boss.IsDead)
-        {
-            int bossId = boss.gameObject.GetInstanceID();
-            if (hitThisDash.Contains(bossId)) return;
+        if (boss == null || boss.IsDead) return;
 
-            hitThisDash.Add(bossId);
-            int finalDamage = Mathf.RoundToInt(baseDamage * currentDamageMultiplier);
-            boss.TakeDamage(finalDamage);
-            Debug.Log($"DASH HIT BOSS! BaseDmg={baseDamage}, Multiplier={currentDamageMultiplier:F1}x, FinalDmg={finalDamage}");
-            return;
-        }
+        int bossId = boss.gameObject.GetInstanceID();
+        if (!bossesHitThisDash.Add(bossId)) return;
+
+        int finalDamage = Mathf.RoundToInt(baseDamage * currentDamageMultiplier);
+        boss.TakeDamage(finalDamage);
     }
 }

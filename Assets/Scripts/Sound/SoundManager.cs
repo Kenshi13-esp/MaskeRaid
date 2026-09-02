@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum SoundType
@@ -39,6 +40,7 @@ public class SoundManager : MonoBehaviour
 	[SerializeField] private Sound[] sounds;
 	[SerializeField] private int audioSourcePoolSize = 5;
 	
+	private readonly Dictionary<SoundType, Sound> soundsByType = new Dictionary<SoundType, Sound>();
 	private AudioSource[] audioSourcePool;
 	private int currentAudioSourceIndex = 0;
 
@@ -55,7 +57,24 @@ public class SoundManager : MonoBehaviour
 			return;
 		}
 		
+		BuildSoundLookup();
 		InitializeAudioSourcePool();
+	}
+
+	/// <summary>
+	/// Indexa los sonidos por tipo una sola vez. Antes cada reproduccion recorria el array
+	/// con un Array.Find y una lambda, que asignaba memoria en cada golpe o dash.
+	/// </summary>
+	private void BuildSoundLookup()
+	{
+		if (sounds == null) return;
+
+		foreach (Sound sound in sounds)
+		{
+			if (sound == null) continue;
+
+			soundsByType[sound.soundType] = sound;
+		}
 	}
 
 	private void InitializeAudioSourcePool()
@@ -75,9 +94,7 @@ public class SoundManager : MonoBehaviour
 
 	private void PlaySoundInternal(SoundType soundType, float volume)
 	{
-		Sound sound = System.Array.Find(sounds, s => s.soundType == soundType);
-		
-		if (sound == null || sound.clip == null)
+		if (!soundsByType.TryGetValue(soundType, out Sound sound) || sound.clip == null)
 		{
 			Debug.LogWarning($"Sound {soundType} not found or has no clip assigned!");
 			return;

@@ -1,18 +1,30 @@
-using UnityEngine;
+using System;
 using System.Collections;
+using UnityEngine;
 using UnityEngine.Events;
 
+/// <summary>
+/// Vida del jugador, retroceso al recibir dano e invulnerabilidades. Notifica los cambios de
+/// vida por evento para que el HUD no la consulte cada frame, y se publica de forma estatica
+/// para que los componentes de dano no tengan que resolverla con GetComponent en cada
+/// fotograma de fisica.
+/// </summary>
 public class PlayerHealth : MonoBehaviour
 {
+    private const float BlinkSpeed = 0.1f;
+    private const float KnockbackDamping = 0.96f;
+
+    private static readonly WaitForSeconds BlinkWait = new WaitForSeconds(BlinkSpeed);
+
     [Header("Settings")]
     [SerializeField] private int maxHP = 5;
     [SerializeField] private float knockbackDuration = 0.5f;
     [SerializeField] private float sideForce = 18f;
     [SerializeField] private float jumpHeight = 1.8f;
     [SerializeField] private float postLandingInvincibility = 0.2f;
-    
+
     [Header("Post-Dash Invincibility")]
-    [Tooltip("Tiempo de invulnerabilidad después del dash (segundos). 0.15 = ~9 frames a 60fps")]
+    [Tooltip("Tiempo de invulnerabilidad despues del dash (segundos)")]
     [SerializeField] private float postDashInvincibilityTime = 0.15f;
 
     [Header("Events")]
@@ -24,13 +36,31 @@ public class PlayerHealth : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private Transform spriteTransform;
 
-    private bool isLaunched = false;
-    private bool isInvincible = false;
-    private bool isDashInvincible = false;
-    private bool isDead = false;
+    private WaitForSeconds postDashWait;
+    private Coroutine launchRoutine;
+    private Coroutine invincibilityRoutine;
+
+    private bool isLaunched;
+    private bool isInvincible;
+    private bool isDashInvincible;
+    private bool isDead;
+
+    /// <summary>Jugador activo en la escena, o null si no hay ninguno.</summary>
+    public static PlayerHealth Active { get; private set; }
+
+    /// <summary>Se dispara al cambiar la vida (vida actual, vida maxima).</summary>
+    public event Action<int, int> HealthChanged;
 
     public bool IsLaunched => isLaunched;
     public bool IsDead => isDead;
+    public int CurrentHP => hp;
+    public int MaxHP => maxHP;
+
+    /// <summary>True mientras el jugador esta dasheando. Lo consultan los danos por contacto.</summary>
+    public bool IsDashing => dashController != null && dashController.IsDashing;
+
+    /// <summary>True si ahora mismo el jugador no puede recibir dano.</summary>
+    public bool IsInvulnerable => isLaunched || isInvincible || isDashInvincible;
 
     private void Awake()
     {
@@ -38,20 +68,39 @@ public class PlayerHealth : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         dashController = GetComponent<PlayerDashController2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
         if (spriteRenderer != null) spriteTransform = spriteRenderer.transform;
-        
-        if (OnPlayerDeath == null)
-            OnPlayerDeath = new UnityEvent();
+
+        postDashWait = new WaitForSeconds(postDashInvincibilityTime);
+
+        if (OnPlayerDeath == null) OnPlayerDeath = new UnityEvent();
     }
 
+    private void OnEnable()
+    {
+        Active = this;
+    }
+
+    private void OnDisable()
+    {
+        if (Active == this) Active = null;
+    }
+
+    private void Start()
+    {
+        HealthChanged?.Invoke(hp, maxHP);
+    }
+
+    /// <summary>Aplica dano al jugador y lo lanza en la direccion del golpe.</summary>
     public void TakeDamage(int amount, Vector2 knockbackDir, float forceMultiplier, bool ignoreInvincibility = false)
     {
-        if (isDead || (!ignoreInvincibility && (isLaunched || isInvincible || isDashInvincible))) return;
+        if (isDead) return;
+        if (!ignoreInvincibility && IsInvulnerable) return;
 
-        hp -= amount;
-        hp = Mathf.Max(0, hp);
-        
+        hp = Mathf.Max(0, hp - amount);
+
         SoundManager.PlaySound(SoundType.PLAYER_HIT);
+        HealthChanged?.Invoke(hp, maxHP);
 
         if (hp <= 0)
         {
@@ -59,63 +108,108 @@ public class PlayerHealth : MonoBehaviour
             return;
         }
 
-        StopAllCoroutines();
-        StartCoroutine(ParabolicLaunch(knockbackDir));
+        StopHealthRoutines();
+        launchRoutine = StartCoroutine(ParabolicLaunch(knockbackDir, forceMultiplier));
+    }
+
+    /// <summary>Restaura la vida al maximo. Se usa entre rondas del boss rush.</summary>
+    public void HealToFull()
+    {
+        hp = maxHP;
+        HealthChanged?.Invoke(hp, maxHP);
+    }
+
+    /// <summary>Concede una ventana breve de invulnerabilidad al terminar un dash.</summary>
+    public void GrantPostDashInvincibility()
+    {
+        if (isLaunched || isDead) return;
+        if (invincibilityRoutine != null) return;
+
+        invincibilityRoutine = StartCoroutine(PostDashInvincibilityRoutine());
+    }
+
+    /// <summary>Activa o desactiva la invulnerabilidad mientras el dash esta en curso.</summary>
+    public void SetDashInvincibility(bool invincible)
+    {
+        isDashInvincible = invincible;
     }
 
     private void Die()
     {
         if (isDead) return;
-        
+
         isDead = true;
-        Debug.Log("[PlayerHealth] PLAYER DEAD - Game Over");
-        
-        if (dashController != null)
-            dashController.enabled = false;
-        
-        if (rb != null)
-            rb.linearVelocity = Vector2.zero;
-        
+
+        StopHealthRoutines();
+
+        if (dashController != null) dashController.enabled = false;
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
         OnPlayerDeath?.Invoke();
     }
 
-    private IEnumerator ParabolicLaunch(Vector2 dir)
+    /// <summary>
+    /// Corta el retroceso y el parpadeo en curso dejando al jugador visible. Sustituye al
+    /// StopAllCoroutines anterior, que podia dejar el sprite apagado o la invulnerabilidad
+    /// encendida para siempre si se interrumpia a mitad de parpadeo.
+    /// </summary>
+    private void StopHealthRoutines()
+    {
+        if (launchRoutine != null)
+        {
+            StopCoroutine(launchRoutine);
+            launchRoutine = null;
+        }
+
+        if (invincibilityRoutine != null)
+        {
+            StopCoroutine(invincibilityRoutine);
+            invincibilityRoutine = null;
+        }
+
+        isInvincible = false;
+
+        if (spriteRenderer != null && !spriteRenderer.enabled) spriteRenderer.enabled = true;
+    }
+
+    private IEnumerator ParabolicLaunch(Vector2 direction, float forceMultiplier)
     {
         isLaunched = true;
         if (dashController != null) dashController.EndDashState();
 
-        Vector3 startLocalPos = spriteTransform.localPosition;
+        Vector3 startLocalPosition = spriteTransform != null ? spriteTransform.localPosition : Vector3.zero;
 
         rb.linearVelocity = Vector2.zero;
-        float horizontalDir = Mathf.Sign(dir.x);
-        rb.AddForce(new Vector2(horizontalDir * sideForce, 0f), ForceMode2D.Impulse);
+        rb.AddForce(new Vector2(Mathf.Sign(direction.x) * sideForce * forceMultiplier, 0f), ForceMode2D.Impulse);
 
         float elapsed = 0f;
+
         while (elapsed < knockbackDuration)
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / knockbackDuration;
+            float progress = elapsed / knockbackDuration;
 
-            float heightOffset = 4f * t * (1f - t) * jumpHeight;
             if (spriteTransform != null)
             {
+                float heightOffset = 4f * progress * (1f - progress) * jumpHeight;
                 spriteTransform.localPosition = new Vector3(
-                    startLocalPos.x,
-                    startLocalPos.y + heightOffset,
-                    startLocalPos.z
-                );
+                    startLocalPosition.x,
+                    startLocalPosition.y + heightOffset,
+                    startLocalPosition.z);
             }
 
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x * 0.96f, rb.linearVelocity.y);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x * KnockbackDamping, rb.linearVelocity.y);
 
             yield return null;
         }
 
-        if (spriteTransform != null) spriteTransform.localPosition = startLocalPos;
+        if (spriteTransform != null) spriteTransform.localPosition = startLocalPosition;
+
         rb.linearVelocity = Vector2.zero;
         isLaunched = false;
+        launchRoutine = null;
 
-        StartCoroutine(InvincibilityRoutine());
+        invincibilityRoutine = StartCoroutine(InvincibilityRoutine());
     }
 
     private IEnumerator InvincibilityRoutine()
@@ -123,49 +217,28 @@ public class PlayerHealth : MonoBehaviour
         isInvincible = true;
 
         float timer = 0f;
-        const float blinkSpeed = 0.1f;
+
         while (timer < postLandingInvincibility)
         {
-            if (spriteRenderer != null)
-                spriteRenderer.enabled = !spriteRenderer.enabled;
+            if (spriteRenderer != null) spriteRenderer.enabled = !spriteRenderer.enabled;
 
-            yield return new WaitForSeconds(blinkSpeed);
-            timer += blinkSpeed;
+            yield return BlinkWait;
+            timer += BlinkSpeed;
         }
 
         if (spriteRenderer != null) spriteRenderer.enabled = true;
+
         isInvincible = false;
-    }
-
-    public void GrantPostDashInvincibility()
-    {
-        if (isLaunched) return;
-        StartCoroutine(PostDashInvincibilityRoutine());
-    }
-
-    public void SetDashInvincibility(bool invincible)
-    {
-        isDashInvincible = invincible;
+        invincibilityRoutine = null;
     }
 
     private IEnumerator PostDashInvincibilityRoutine()
     {
         isInvincible = true;
-        
-        yield return new WaitForSeconds(postDashInvincibilityTime);
-        
+
+        yield return postDashWait;
+
         isInvincible = false;
+        invincibilityRoutine = null;
     }
-
-    public void HealToFull()
-    {
-        hp = maxHP;
-        Debug.Log($"[PlayerHealth] Vida restaurada a {maxHP} HP");
-    }
-
-    public int GetCurrentHP() => hp;
-    public int GetMaxHP() => maxHP;
 }
-
-
-

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3857b3d1c6008147aef9c494e07c6dd, type: 3}
+  m_Name: Mask_Qetza
+  m_EditorClassIdentifier: 
+  maskName: Mascara de Qetza
+  description: Carga horizontal de pared a pared, como el ataque de Qetza.
+  maskSprite: {fileID: 0}
+  dashMoveKind: 3
+  dashProfile: {fileID: 11400000, guid: 05cb483e5b8ac084a9c8437671a994ab, type: 2}
+  animatorController: {fileID: 0}
+  instructionsSprite: {fileID: 0}

@@ -1,40 +1,45 @@
 using UnityEngine;
 
+/// <summary>
+/// Conecta un boss concreto colocado en la escena con el jugador para entregarle su mascara
+/// al morir. El boss rush hace lo mismo con los bosses que instancia; este componente sirve
+/// para encuentros puestos a mano.
+/// </summary>
 public class PowerTransferManager : MonoBehaviour
 {
     [Header("Referencias")]
-    [Tooltip("El script BossHealth del boss que otorga el poder")]
+    [Tooltip("BossHealth del boss que otorga la mascara")]
     [SerializeField] private BossHealth bossHealth;
-    
-    [Tooltip("El PlayerDashController2D del jugador")]
-    [SerializeField] private PlayerDashController2D playerDashController;
+
+    [Tooltip("PlayerMaskController del jugador. Vacio = se busca por tag")]
+    [SerializeField] private PlayerMaskController playerMaskController;
+
+    private void Awake()
+    {
+        if (playerMaskController != null) return;
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) playerMaskController = player.GetComponent<PlayerMaskController>();
+    }
 
     private void OnEnable()
     {
-        if (bossHealth != null)
-        {
-            bossHealth.OnBossDeath.AddListener(OnBossDefeated);
-        }
+        if (bossHealth != null) bossHealth.OnBossDeath.AddListener(OnBossDefeated);
     }
 
     private void OnDisable()
     {
-        if (bossHealth != null)
-        {
-            bossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
-        }
+        if (bossHealth != null) bossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
     }
 
-    private void OnBossDefeated(DashAbility newPower)
+    private void OnBossDefeated(MaskDefinition mask)
     {
-        if (playerDashController != null && newPower != null)
+        if (mask == null || playerMaskController == null)
         {
-            playerDashController.SetDashAbility(newPower);
-            Debug.Log($"[PowerTransfer] ¡El jugador ha obtenido el poder: {newPower.AbilityName}!");
+            Debug.LogWarning("[PowerTransfer] No se pudo entregar la mascara. Revisa las referencias.", this);
+            return;
         }
-        else
-        {
-            Debug.LogWarning("[PowerTransfer] No se pudo transferir el poder. Verifica las referencias.");
-        }
+
+        playerMaskController.EquipMask(mask);
     }
 }

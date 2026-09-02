@@ -2,666 +2,313 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody2D))]
+/// <summary>
+/// Entrada, movimiento y carga del dash del jugador. No implementa ningun dash: la ejecucion
+/// se delega en el <see cref="DashMoveBase"/> que aporta la mascara equipada, que es el mismo
+/// componente que usa el boss correspondiente.
+/// </summary>
+[RequireComponent(typeof(Rigidbody2D), typeof(PlayerDashActor), typeof(PlayerMaskController))]
 public class PlayerDashController2D : MonoBehaviour
 {
+    private const float InputDeadZoneSqr = 0.01f;
+
     [Header("Move")]
     [SerializeField] private float moveSpeed = 6f;
 
-    [Header("Visual (flip)")]
-    [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private bool flipOnlyOnX = true;
-    
-    [Header("Animation")]
-    [SerializeField] private Animator animator;
-    [Tooltip("Animator que se usa durante el dash con rebote (Glorbo)")]
-    [SerializeField] private RuntimeAnimatorController glorboAnimatorController;
-    [Tooltip("Animator que se usa con el poder de Oniki/Hulk")]
-    [SerializeField] private RuntimeAnimatorController onikiAnimatorController;
-
-    [Header("Dash Abilities")]
-    [Tooltip("Habilidad de dash inicial (default)")]
-    [SerializeField] private DashAbility defaultDashAbility;
-    [Tooltip("Habilidad básica que restaura el animator original")]
-    [SerializeField] private DashAbility basicDashAbility;
-    [Tooltip("Habilidad de Hulk que activa el animator de Oniki")]
-    [SerializeField] private DashAbility hulkDashAbility;
-
     [Header("Dash Charge + Slowmo")]
+    [Tooltip("Escala de tiempo mientras se mantiene pulsado el dash")]
     [SerializeField] private float slowMoScale = 0.25f;
 
-    [Header("Walls (no atraviesa paredes)")]
-    [SerializeField] private LayerMask wallsMask;
-    [SerializeField] private float wallSkin = 0.02f;
-
-    [Header("Dash Hitbox")]
-    [SerializeField] private DashHitbox2D dashHitbox;
-
-    [Header("Dash VFX")]
-    [SerializeField] private Transform dashVfxSpawnPoint;
-    
-    [Header("Bounce Physics Material")]
-    [Tooltip("Material de física para rebotes (usar JellyBounce)")]
-    [SerializeField] private PhysicsMaterial2D bounceMaterial;
-    
-    [Header("Instructions")]
-    [Tooltip("Sprite de instrucciones para mostrar al obtener poder de Glorbo")]
-    [SerializeField] private Sprite glorboInstructionsSprite;
-    [Tooltip("Sprite de instrucciones para mostrar al obtener poder de Oniki")]
-    [SerializeField] private Sprite onikiInstructionsSprite;
-
-    private DashAbility currentDashAbility;
-    private InstructionsHandler instructionsHandler;
-    
-    private Rigidbody2D rb;
-    private PhysicsMaterial2D originalMaterial;
-    private RuntimeAnimatorController originalAnimatorController;
-    private PlayerHealth playerHealth;
-    private BoxCollider2D boxCollider;
-    private Collider2D[] enemyColliders;
-    
     private static readonly int RunHash = Animator.StringToHash("Run");
     private static readonly int ChargeHash = Animator.StringToHash("Charge");
-    private static readonly int DashHash = Animator.StringToHash("Dash");
+
+    private Rigidbody2D body;
+    private PlayerDashActor dashActor;
+    private PlayerMaskController maskController;
+    private PlayerHealth playerHealth;
 
     private Vector2 moveInput;
-    private Vector2 lastMoveDir = Vector2.right;
+    private Vector2 lastMoveDirection = Vector2.right;
 
     private bool isCharging;
-    private bool isDashing;
     private bool isCooldown;
-
+    private bool isRunAnimating;
     private float chargeTimer;
     private int dashesUsed;
-    private int dashSerialCounter;
-
     private float defaultFixedDeltaTime;
-    private Coroutine cooldownCoroutine;
-    
-    private int bouncesLeft;
-    private bool isBouncing;
-    private Vector3 originalScale;
-    private AudioSource chargeAudioSource;
+    private Coroutine cooldownRoutine;
 
-    public bool IsDashing => isDashing;
+    /// <summary>True mientras el dash de la mascara equipada esta en curso.</summary>
+    public bool IsDashing => ActiveMove != null && ActiveMove.IsDashing;
+
+    /// <summary>True mientras se mantiene pulsado el dash acumulando carga.</summary>
+    public bool IsCharging => isCharging;
+
+    /// <summary>True mientras el combo esta en cooldown.</summary>
+    public bool IsInCooldown => isCooldown;
+
+    /// <summary>Carga acumulada entre 0 y 1.</summary>
+    public float ChargeProgress
+    {
+        get
+        {
+            DashProfile profile = ActiveProfile;
+            if (profile == null || profile.MaxChargeTime <= 0f) return 0f;
+            return Mathf.Clamp01(chargeTimer / profile.MaxChargeTime);
+        }
+    }
+
+    /// <summary>Dashes que permite el combo de la mascara equipada.</summary>
+    public int MaxComboDashes
+    {
+        get
+        {
+            DashProfile profile = ActiveProfile;
+            return profile != null ? profile.ComboDashes : 1;
+        }
+    }
+
+    /// <summary>Dashes que quedan antes de entrar en cooldown.</summary>
+    public int DashesRemaining => Mathf.Clamp(MaxComboDashes - dashesUsed, 0, MaxComboDashes);
+
+    /// <summary>Mascara equipada actualmente.</summary>
+    public MaskDefinition CurrentMask => maskController != null ? maskController.CurrentMask : null;
+
+    private DashMoveBase ActiveMove => maskController != null ? maskController.CurrentMove : null;
+    private DashProfile ActiveProfile => ActiveMove != null ? ActiveMove.Profile : null;
+    private Animator Animator => dashActor != null ? dashActor.Animator : null;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        body = GetComponent<Rigidbody2D>();
+        dashActor = GetComponent<PlayerDashActor>();
+        maskController = GetComponent<PlayerMaskController>();
         playerHealth = GetComponent<PlayerHealth>();
-        boxCollider = GetComponent<BoxCollider2D>();
+
         defaultFixedDeltaTime = Time.fixedDeltaTime;
-
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
-        
-        if (animator != null)
-            originalAnimatorController = animator.runtimeAnimatorController;
-            
-        originalScale = transform.localScale;
-        originalMaterial = rb.sharedMaterial;
-        
-        chargeAudioSource = gameObject.AddComponent<AudioSource>();
-        chargeAudioSource.loop = true;
-        chargeAudioSource.playOnAwake = false;
-
-        if (defaultDashAbility != null)
-        {
-            currentDashAbility = defaultDashAbility;
-        }
-        else
-        {
-            Debug.LogWarning("[PlayerDash] No se asignó defaultDashAbility. El dash no funcionará correctamente.");
-        }
-        
-        instructionsHandler = gameObject.AddComponent<InstructionsHandler>();
-
-        CacheEnemyColliders();
     }
 
-    private void CacheEnemyColliders()
+    private void OnEnable()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        GameObject[] bosses = GameObject.FindGameObjectsWithTag("Boss");
-        
-        int totalEnemies = enemies.Length + bosses.Length;
-        enemyColliders = new Collider2D[totalEnemies];
-        
-        int index = 0;
-        foreach (GameObject enemy in enemies)
-        {
-            Collider2D col = enemy.GetComponent<Collider2D>();
-            if (col != null) enemyColliders[index++] = col;
-        }
-        foreach (GameObject boss in bosses)
-        {
-            Collider2D col = boss.GetComponent<Collider2D>();
-            if (col != null) enemyColliders[index++] = col;
-        }
+        GamePause.PauseChanged += OnPauseChanged;
+
+        if (maskController != null) maskController.MaskEquipped += OnMaskEquipped;
     }
 
-    public void OnMove(InputAction.CallbackContext ctx)
+    private void OnDisable()
     {
-        Vector2 v = ctx.ReadValue<Vector2>();
-        if (ctx.canceled) v = Vector2.zero;
+        GamePause.PauseChanged -= OnPauseChanged;
 
-        moveInput = v;
+        if (maskController != null) maskController.MaskEquipped -= OnMaskEquipped;
 
-        if (moveInput.sqrMagnitude > 0.01f)
-        {
-            lastMoveDir = moveInput.normalized;
-            UpdateFacing(moveInput);
-        }
+        CancelCharge(false);
     }
 
-    public void OnDash(InputAction.CallbackContext ctx)
+    /// <summary>Callback de la accion Move del Input System (teclado y mando).</summary>
+    public void OnMove(InputAction.CallbackContext context)
     {
-        Debug.Log($"[Dash] OnDash llamado. Fase: {ctx.phase}, started: {ctx.started}, performed: {ctx.performed}, canceled: {ctx.canceled}");
-        if (ctx.started || ctx.performed) StartCharge();
-        if (ctx.canceled) ReleaseDash();
+        // Con el menu abierto el stick navega la interfaz: no debe mover ni girar al jugador.
+        if (GamePause.IsGameplayBlocked)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
+        Vector2 value = context.canceled ? Vector2.zero : context.ReadValue<Vector2>();
+
+        moveInput = value.sqrMagnitude > 1f ? value.normalized : value;
+
+        if (moveInput.sqrMagnitude <= InputDeadZoneSqr) return;
+
+        lastMoveDirection = moveInput.normalized;
+        dashActor.FaceDirection(moveInput);
+    }
+
+    /// <summary>Callback de la accion Dash del Input System (teclado y mando).</summary>
+    public void OnDash(InputAction.CallbackContext context)
+    {
+        if (context.started) StartCharge();
+        else if (context.canceled) ReleaseDash();
+    }
+
+    /// <summary>Equipa una mascara nueva y reinicia el combo.</summary>
+    public void SetMask(MaskDefinition mask)
+    {
+        if (maskController == null) return;
+
+        maskController.EquipMask(mask);
+        ResetCombo();
+    }
+
+    /// <summary>Interrumpe la carga y el dash en curso. La usa el retroceso al recibir dano.</summary>
+    public void EndDashState()
+    {
+        CancelCharge(true);
+
+        if (ActiveMove != null) ActiveMove.CancelDash();
+
+        if (body != null) body.linearVelocity = Vector2.zero;
     }
 
     private void Update()
     {
-        if (isCharging && currentDashAbility != null)
-        {
-            chargeTimer += Time.unscaledDeltaTime;
-            
-            float maxCharge = currentDashAbility.MaxChargeTime;
-            if (chargeTimer >= maxCharge)
-            {
-                chargeTimer = maxCharge;
-                ReleaseDash();
-            }
-        }
-        
-        if (animator != null)
-        {
-            bool isMoving = moveInput.sqrMagnitude > 0.01f && !isDashing;
-            animator.SetBool(RunHash, isMoving);
-        }
+        UpdateCharge();
+        UpdateRunAnimation();
+    }
+
+    private void UpdateRunAnimation()
+    {
+        bool isRunning = moveInput.sqrMagnitude > InputDeadZoneSqr && !IsDashing;
+        if (isRunning == isRunAnimating) return;
+
+        Animator animator = Animator;
+        if (animator == null) return;
+
+        isRunAnimating = isRunning;
+        animator.SetBool(RunHash, isRunning);
     }
 
     private void FixedUpdate()
     {
         if (playerHealth != null && playerHealth.IsLaunched)
         {
-            rb.linearVelocity = Vector2.zero;
-            return;
-        }
-        
-        if (isDashing)
-        {
+            body.linearVelocity = Vector2.zero;
             return;
         }
 
-        rb.linearVelocity = moveInput * moveSpeed;
+        if (IsDashing) return;
+
+        body.linearVelocity = moveInput * moveSpeed;
     }
 
-    private void UpdateFacing(Vector2 input)
+    private void UpdateCharge()
     {
-        if (spriteRenderer == null) return;
+        if (!isCharging) return;
 
-        if (flipOnlyOnX)
-        {
-            if (Mathf.Abs(input.x) > 0.01f)
-                spriteRenderer.flipX = input.x < 0f;
-        }
-        else
-        {
-            if (input.sqrMagnitude > 0.01f)
-                spriteRenderer.flipX = input.x < 0f;
-        }
+        DashProfile profile = ActiveProfile;
+        if (profile == null) return;
+
+        chargeTimer += Time.unscaledDeltaTime;
+
+        if (chargeTimer < profile.MaxChargeTime) return;
+
+        chargeTimer = profile.MaxChargeTime;
+        ReleaseDash();
     }
 
     private void StartCharge()
     {
-        if (playerHealth != null && playerHealth.IsLaunched)
-        {
-            Debug.Log("[Dash] No se puede cargar: Player está launched");
-            return;
-        }
-        if (isDashing)
-        {
-            Debug.Log("[Dash] No se puede cargar: ya está dasheando");
-            return;
-        }
-        if (isCooldown)
-        {
-            Debug.Log("[Dash] No se puede cargar: está en cooldown");
-            return;
-        }
-        if (isCharging)
-        {
-            Debug.Log("[Dash] No se puede cargar: ya está cargando");
-            return;
-        }
-        if (currentDashAbility == null)
-        {
-            Debug.Log("[Dash] No se puede cargar: currentDashAbility es null");
-            return;
-        }
-        if (dashesUsed >= currentDashAbility.ComboDashes)
-        {
-            Debug.Log($"[Dash] No se puede cargar: dashesUsed ({dashesUsed}) >= ComboDashes ({currentDashAbility.ComboDashes})");
-            return;
-        }
+        if (GamePause.IsGameplayBlocked) return;
+        if (isCharging || isCooldown || IsDashing) return;
+        if (playerHealth != null && (playerHealth.IsLaunched || playerHealth.IsDead)) return;
+        if (ActiveProfile == null) return;
+        if (dashesUsed >= MaxComboDashes) return;
 
-        Debug.Log($"[Dash] ¡CARGANDO DASH! Poder: {currentDashAbility.AbilityName}");
         isCharging = true;
         chargeTimer = 0f;
 
-        Time.timeScale = slowMoScale;
-        Time.fixedDeltaTime = defaultFixedDeltaTime * Time.timeScale;
-        
-        if (animator != null)
-            animator.SetBool(ChargeHash, true);
+        ApplySlowMotion(true);
+
+        Animator animator = Animator;
+        if (animator != null) animator.SetBool(ChargeHash, true);
     }
 
     private void ReleaseDash()
     {
         if (!isCharging) return;
-        if (isDashing || isCooldown) return;
-        if (currentDashAbility == null) return;
+
+        float chargeRatio = ChargeProgress;
+
+        CancelCharge(true);
+
+        if (isCooldown || IsDashing) return;
+
+        DashMoveBase move = ActiveMove;
+        if (move == null) return;
+
+        Vector2 direction = lastMoveDirection.sqrMagnitude > InputDeadZoneSqr ? lastMoveDirection : Vector2.right;
+
+        dashesUsed++;
+        StartCoroutine(DashSequence(move, DashRequest.InDirection(direction, chargeRatio)));
+    }
+
+    private IEnumerator DashSequence(DashMoveBase move, DashRequest request)
+    {
+        yield return move.Execute(request);
+
+        if (dashesUsed >= MaxComboDashes) StartCooldown();
+    }
+
+    private void CancelCharge(bool restoreTimeScale)
+    {
+        if (!isCharging) return;
 
         isCharging = false;
+        chargeTimer = 0f;
 
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDeltaTime;
-        
-        if (animator != null)
-        {
-            animator.SetBool(ChargeHash, false);
-            animator.SetTrigger(DashHash);
-        }
+        ApplySlowMotion(false, restoreTimeScale);
 
-        float maxCharge = currentDashAbility.MaxChargeTime;
-        float t = Mathf.Clamp01(chargeTimer / maxCharge);
-        float dashDistance = Mathf.Lerp(currentDashAbility.MinDashDistance, currentDashAbility.MaxDashDistance, t);
-
-        Vector2 dashDir = (lastMoveDir.sqrMagnitude > 0.01f) ? lastMoveDir : Vector2.right;
-
-        if (currentDashAbility.EnableWallBounce)
-        {
-            Debug.Log($"[Dash] Iniciando dash CON REBOTE. Dir: {dashDir}, Dist: {dashDistance}");
-            StartCoroutine(DashRoutine_WithBounce(dashDir, dashDistance));
-        }
-        else
-        {
-            Debug.Log($"[Dash] Iniciando dash NORMAL. Dir: {dashDir}, Dist: {dashDistance}");
-            StartCoroutine(DashRoutine_ByDuration(dashDir, dashDistance));
-        }
+        Animator animator = Animator;
+        if (animator != null) animator.SetBool(ChargeHash, false);
     }
 
-    private void PlayDashSound()
+    private void ApplySlowMotion(bool enable, bool restoreTimeScale = true)
     {
-        if (animator == null) return;
-        
-        RuntimeAnimatorController currentController = animator.runtimeAnimatorController;
-        
-        if (currentController == glorboAnimatorController)
+        if (enable)
         {
-            SoundManager.PlaySound(SoundType.GLORBO_ATTACK);
-        }
-        else if (currentController == onikiAnimatorController)
-        {
-            SoundManager.PlaySound(SoundType.ONI_ATTACK);
-        }
-        else
-        {
-            SoundManager.PlaySound(SoundType.PLAYER_ATTACK);
-        }
-    }
-
-    private IEnumerator DashRoutine_ByDuration(Vector2 dashDir, float dashDistance)
-    {
-        isDashing = true;
-        PlayDashSound();
-        
-        rb.linearVelocity = Vector2.zero;
-
-        if (playerHealth != null)
-            playerHealth.SetDashInvincibility(true);
-
-        if (boxCollider != null && enemyColliders != null)
-        {
-            foreach (Collider2D enemyCol in enemyColliders)
-            {
-                if (enemyCol != null)
-                    Physics2D.IgnoreCollision(boxCollider, enemyCol, true);
-            }
-        }
-
-        dashSerialCounter++;
-        if (dashHitbox != null && currentDashAbility != null)
-            dashHitbox.BeginDash(dashSerialCounter, currentDashAbility.DamageMultiplier);
-
-        SpawnDashVFX(dashDir);
-
-        Vector2 startPos = rb.position;
-        Vector2 target = startPos + dashDir * dashDistance;
-
-        RaycastHit2D hit = Physics2D.Raycast(startPos, dashDir, dashDistance, wallsMask);
-        if (hit.collider != null)
-            target = hit.point - dashDir * wallSkin;
-
-        float elapsed = 0f;
-        float dur = Mathf.Max(0.01f, currentDashAbility.DashDuration);
-
-        while (elapsed < dur)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            float alpha = Mathf.Clamp01(elapsed / dur);
-
-            Vector2 next = Vector2.Lerp(startPos, target, alpha);
-            rb.MovePosition(next);
-
-            yield return null;
-        }
-
-        rb.MovePosition(target);
-
-        if (dashHitbox != null)
-            dashHitbox.EndDash();
-
-        if (boxCollider != null && enemyColliders != null)
-        {
-            foreach (Collider2D enemyCol in enemyColliders)
-            {
-                if (enemyCol != null)
-                    Physics2D.IgnoreCollision(boxCollider, enemyCol, false);
-            }
-        }
-
-        if (playerHealth != null)
-            playerHealth.SetDashInvincibility(false);
-
-        isDashing = false;
-        
-        dashesUsed++;
-
-        if (playerHealth != null)
-            playerHealth.GrantPostDashInvincibility();
-
-        if (currentDashAbility != null && dashesUsed >= currentDashAbility.ComboDashes)
-        {
-            if (cooldownCoroutine != null)
-                StopCoroutine(cooldownCoroutine);
-            cooldownCoroutine = StartCoroutine(CooldownRoutine());
-        }
-    }
-    
-    private IEnumerator DashRoutine_WithBounce(Vector2 dashDir, float dashDistance)
-    {
-        Debug.Log($"[Dash] DashRoutine_WithBounce iniciado. BounceSpeed: {currentDashAbility.BounceSpeed}, MaxBounces: {currentDashAbility.MaxBounces}, Duration: {currentDashAbility.DashDuration}");
-        
-        isDashing = true;
-        PlayDashSound();
-        
-        isBouncing = true;
-        bouncesLeft = currentDashAbility.MaxBounces;
-        
-        rb.linearVelocity = Vector2.zero;
-        
-        if (bounceMaterial != null)
-        {
-            rb.sharedMaterial = bounceMaterial;
-            Debug.Log($"[Dash] Material de física cambiado a: {bounceMaterial.name} (bounciness: {bounceMaterial.bounciness})");
-        }
-        else
-        {
-            Debug.LogWarning("[Dash] No se asignó bounceMaterial. El rebote puede no funcionar correctamente.");
-        }
-
-        if (playerHealth != null)
-            playerHealth.SetDashInvincibility(true);
-
-        if (boxCollider != null && enemyColliders != null)
-        {
-            foreach (Collider2D enemyCol in enemyColliders)
-            {
-                if (enemyCol != null)
-                    Physics2D.IgnoreCollision(boxCollider, enemyCol, true);
-            }
-        }
-
-        dashSerialCounter++;
-        if (dashHitbox != null && currentDashAbility != null)
-            dashHitbox.BeginDash(dashSerialCounter, currentDashAbility.DamageMultiplier);
-
-        SpawnDashVFX(dashDir);
-        
-        rb.linearVelocity = dashDir * currentDashAbility.BounceSpeed;
-        Debug.Log($"[Dash] Velocidad aplicada: {rb.linearVelocity}, Magnitud: {rb.linearVelocity.magnitude}");
-
-        float elapsed = 0f;
-        float dur = Mathf.Max(0.01f, currentDashAbility.DashDuration);
-
-        while (elapsed < dur && isBouncing)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            
-            float spd = rb.linearVelocity.magnitude;
-            if (spd > currentDashAbility.MaxSpeedClamp)
-            {
-                rb.linearVelocity = rb.linearVelocity.normalized * currentDashAbility.MaxSpeedClamp;
-            }
-            
-            yield return null;
-        }
-        
-        Debug.Log($"[Dash] DashRoutine_WithBounce terminado. Elapsed: {elapsed}, isBouncing: {isBouncing}");
-        
-        rb.linearVelocity = Vector2.zero;
-        isBouncing = false;
-        
-        rb.sharedMaterial = originalMaterial;
-        Debug.Log($"[Dash] Material de física restaurado a: {(originalMaterial != null ? originalMaterial.name : "null")}");
-
-        if (dashHitbox != null)
-            dashHitbox.EndDash();
-
-        if (boxCollider != null && enemyColliders != null)
-        {
-            foreach (Collider2D enemyCol in enemyColliders)
-            {
-                if (enemyCol != null)
-                    Physics2D.IgnoreCollision(boxCollider, enemyCol, false);
-            }
-        }
-
-        if (playerHealth != null)
-            playerHealth.SetDashInvincibility(false);
-
-        isDashing = false;
-        
-        dashesUsed++;
-
-        if (playerHealth != null)
-            playerHealth.GrantPostDashInvincibility();
-
-        if (currentDashAbility != null && dashesUsed >= currentDashAbility.ComboDashes)
-        {
-            if (cooldownCoroutine != null)
-                StopCoroutine(cooldownCoroutine);
-            cooldownCoroutine = StartCoroutine(CooldownRoutine());
-        }
-    }
-    
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (!isBouncing || !isDashing)
-        {
+            Time.timeScale = slowMoScale;
+            Time.fixedDeltaTime = defaultFixedDeltaTime * slowMoScale;
             return;
         }
-        
-        if (((1 << collision.gameObject.layer) & wallsMask) != 0)
-        {
-            bouncesLeft--;
-            Debug.Log($"[Dash] ¡REBOTE! Rebotes restantes: {bouncesLeft}, Velocidad: {rb.linearVelocity.magnitude}");
-            
-            float spd = rb.linearVelocity.magnitude;
-            if (spd < currentDashAbility.MinSpeedAfterBounce)
-            {
-                rb.linearVelocity = rb.linearVelocity.normalized * currentDashAbility.MinSpeedAfterBounce;
-                Debug.Log($"[Dash] Velocidad reforzada a: {rb.linearVelocity.magnitude}");
-            }
-            
-            if (bouncesLeft <= 0)
-            {
-                isBouncing = false;
-                rb.linearVelocity = Vector2.zero;
-                Debug.Log($"[Dash] Sin rebotes. Deteniendo.");
-            }
-        }
+
+        Time.fixedDeltaTime = defaultFixedDeltaTime;
+
+        if (restoreTimeScale && !GamePause.IsGameplayBlocked) Time.timeScale = 1f;
+    }
+
+    private void StartCooldown()
+    {
+        if (cooldownRoutine != null) StopCoroutine(cooldownRoutine);
+        cooldownRoutine = StartCoroutine(CooldownRoutine());
     }
 
     private IEnumerator CooldownRoutine()
     {
-        if (currentDashAbility == null) yield break;
-        
+        DashProfile profile = ActiveProfile;
+        float cooldown = profile != null ? profile.DashCooldownAfterCombo : 0f;
+
         isCooldown = true;
-        rb.linearVelocity = Vector2.zero;
 
-        float elapsed = 0f;
-        while(elapsed < currentDashAbility.DashCooldownAfterCombo)
+        yield return new WaitForSeconds(cooldown);
+
+        ResetCombo();
+    }
+
+    private void ResetCombo()
+    {
+        if (cooldownRoutine != null)
         {
-            elapsed += Time.deltaTime;
-            yield return null;
+            StopCoroutine(cooldownRoutine);
+            cooldownRoutine = null;
         }
 
         dashesUsed = 0;
         isCooldown = false;
-        cooldownCoroutine = null;
     }
 
-    private void SpawnDashVFX(Vector2 dashDir)
+    private void OnPauseChanged(bool paused)
     {
-        if (currentDashAbility == null || currentDashAbility.DashVfxPrefab == null || dashVfxSpawnPoint == null) return;
+        if (!paused) return;
 
-        Vector3 spawnPos = dashVfxSpawnPoint.position;
-        GameObject vfx = Instantiate(currentDashAbility.DashVfxPrefab, spawnPos, Quaternion.identity);
-
-        SpriteRenderer vfxSR = vfx.GetComponentInChildren<SpriteRenderer>();
-        if (vfxSR != null && spriteRenderer != null)
-            vfxSR.flipX = spriteRenderer.flipX;
-    }
-    
-    public void SetDashAbility(DashAbility newAbility)
-    {
-        if (newAbility == null)
-        {
-            Debug.LogWarning("[PlayerDash] Intentando asignar DashAbility nulo. Ignorado.");
-            return;
-        }
-        
-        currentDashAbility = newAbility;
-        Debug.Log($"[PlayerDash] ¡Nuevo poder obtenido: {newAbility.AbilityName}! {newAbility.Description}");
-        
-        dashesUsed = 0;
-        isCooldown = false;
-        
-        if (cooldownCoroutine != null)
-        {
-            StopCoroutine(cooldownCoroutine);
-            cooldownCoroutine = null;
-        }
-        
-        if (animator != null)
-        {
-            if (basicDashAbility != null && newAbility == basicDashAbility && originalAnimatorController != null)
-            {
-                animator.runtimeAnimatorController = originalAnimatorController;
-                Debug.Log($"[PlayerDash] ¡Animator restaurado al original (Player_Controller)!");
-            }
-            else if (hulkDashAbility != null && newAbility == hulkDashAbility && onikiAnimatorController != null)
-            {
-                animator.runtimeAnimatorController = onikiAnimatorController;
-                Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Oniki (HulkDash)!");
-                
-                if (instructionsHandler != null && onikiInstructionsSprite != null)
-                {
-                    instructionsHandler.SetInstructionsSprite(onikiInstructionsSprite);
-                    instructionsHandler.ShowInstructions();
-                }
-            }
-            else if (newAbility.EnableWallBounce && glorboAnimatorController != null)
-            {
-                animator.runtimeAnimatorController = glorboAnimatorController;
-                Debug.Log($"[PlayerDash] ¡Animator cambiado permanentemente a Glorbo!");
-                
-                if (instructionsHandler != null && glorboInstructionsSprite != null)
-                {
-                    instructionsHandler.SetInstructionsSprite(glorboInstructionsSprite);
-                    instructionsHandler.ShowInstructions();
-                }
-            }
-        }
-        
-        StartCoroutine(PowerUpVisualFeedback());
-    }
-    
-    private IEnumerator PowerUpVisualFeedback()
-    {
-        if (spriteRenderer == null) yield break;
-        
-        Color originalColor = spriteRenderer.color;
-        Color powerUpColor = new Color(0.3f, 1f, 0.3f, 1f);
-        
-        float duration = 1.5f;
-        float elapsed = 0f;
-        
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.PingPong(elapsed * 6f, 1f);
-            spriteRenderer.color = Color.Lerp(originalColor, powerUpColor, t);
-            
-            float scaleMultiplier = 1f + Mathf.Sin(elapsed * 10f) * 0.1f;
-            transform.localScale = originalScale * scaleMultiplier;
-            
-            yield return null;
-        }
-        
-        spriteRenderer.color = originalColor;
-        transform.localScale = originalScale;
-        
-        Debug.Log($"[PowerUp] NUEVA HABILIDAD ACTIVA:");
-        Debug.Log($"  - Nombre: {currentDashAbility.AbilityName}");
-        Debug.Log($"  - Dashes en combo: {currentDashAbility.ComboDashes}");
-        Debug.Log($"  - Tiempo de carga: {currentDashAbility.MaxChargeTime}s");
-        Debug.Log($"  - Cooldown: {currentDashAbility.DashCooldownAfterCombo}s");
-        Debug.Log($"  - Rebote en paredes: {(currentDashAbility.EnableWallBounce ? "SÍ" : "NO")}");
-    }
-    
-    public DashAbility GetCurrentDashAbility()
-    {
-        return currentDashAbility;
+        CancelCharge(false);
+        moveInput = Vector2.zero;
     }
 
-    public void EndDashState()
+    private void OnMaskEquipped(MaskDefinition mask)
     {
-        StopAllCoroutines();
+        CancelCharge(true);
+        ResetCombo();
 
-        if (dashHitbox != null)
-            dashHitbox.EndDash();
-
-        if (isCharging)
-        {
-            Time.timeScale = 1f;
-            Time.fixedDeltaTime = defaultFixedDeltaTime;
-        }
-
-        isCharging = false;
-        isDashing = false;
-        rb.linearVelocity = Vector2.zero;
-
-        if (isCooldown && cooldownCoroutine != null)
-        {
-            cooldownCoroutine = StartCoroutine(CooldownRoutine());
-        }
+        isRunAnimating = false;
     }
 }
