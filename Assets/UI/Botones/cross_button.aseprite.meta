@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 698bf7344224bf344b69c92aae0e038d
+guid: f0728311fa4d7a846919bbe736b86040
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -123,7 +123,7 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: overlap 1
+  - name: Frame_0
     originalName: 
     pivot: {x: 0.5, y: 0}
     alignment: 9
@@ -133,9 +133,9 @@ ScriptedImporter:
       serializedVersion: 2
       x: 4
       y: 4
-      width: 226
-      height: 284
-    spriteID: 40ceb43ceb265de4ba8c0d8db0498586
+      width: 22
+      height: 22
+    spriteID: 156afefc1bbbc4840a79b5f425235baf
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -144,29 +144,89 @@ ScriptedImporter:
     edges: []
     tessellationDetail: 0
     uvTransform: {x: 4, y: 4}
+  - name: Frame_1
+    originalName: 
+    pivot: {x: 0.5, y: 0}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 34
+      width: 22
+      height: 22
+    spriteID: 84a1fe46ba022dc4784b0288b4e29799
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 34}
+  - name: Frame_2
+    originalName: 
+    pivot: {x: 0.5, y: 0}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 34
+      y: 4
+      width: 22
+      height: 22
+    spriteID: 2c6af18416055c2458931b73398463d3
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 34, y: 4}
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 1674183938
+      value0: 2989274791
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: overlap 1
+    name: cross_button
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: overlap
+    - name: Frame_0
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
         x: 0
         y: 0
-        width: 226
-        height: 284
-      spriteId: 40ceb43ceb265de4ba8c0d8db0498586
+        width: 22
+        height: 22
+      spriteId: 156afefc1bbbc4840a79b5f425235baf
+    - name: Frame_1
+      frameIndex: 1
+      additiveSortOrder: 0
+      cellRect:
+        x: 0
+        y: 0
+        width: 22
+        height: 22
+      spriteId: 84a1fe46ba022dc4784b0288b4e29799
+    - name: Frame_2
+      frameIndex: 2
+      additiveSortOrder: 0
+      cellRect:
+        x: 0
+        y: 0
+        width: 22
+        height: 22
+      spriteId: 2c6af18416055c2458931b73398463d3
     linkedCells: []
     parentIndex: -1
   platformSettings:
@@ -185,5 +245,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 226, y: 284}
-  previousTextureSize: {x: 256, y: 512}
+  canvasSize: {x: 22, y: 22}
+  previousTextureSize: {x: 64, y: 64}
