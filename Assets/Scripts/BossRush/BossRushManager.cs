@@ -4,7 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// Orquesta el boss rush: instancia los bosses en orden, entrega su mascara al jugador al
-/// derrotarlos y gestiona la victoria y el game over.
+/// derrotarlos y gestiona la victoria y el game over. 
+/// Tambien se comunica con el sistema de Ranking para guardar tiempos o limpiar datos.
 /// </summary>
 public class BossRushManager : MonoBehaviour
 {
@@ -211,6 +212,15 @@ public class BossRushManager : MonoBehaviour
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
+        // --- AÑADIDO: GESTIÓN DEL RANKING EN VICTORIA ---
+        if (RunTimer.Active != null)
+        {
+            // StopAndRecord detiene el tiempo y guarda los datos (nombre y tiempo) en la base de datos
+            RunTimer.Active.StopAndRecord();
+            Debug.Log("[BossRushManager] Victoria: Puntuación guardada en el ranking.");
+        }
+        // ------------------------------------------------
+
         if (victoryHandler != null) victoryHandler.TriggerVictory();
     }
 
@@ -225,6 +235,11 @@ public class BossRushManager : MonoBehaviour
         // El cronometro se para antes de tocar la UI, que es lo que lo aloja. La derrota no
         // registra marca: al ranking solo entran las partidas completadas.
         if (RunTimer.Active != null) RunTimer.Active.Stop();
+
+        // --- AÑADIDO: GESTIÓN DE SESIÓN EN DERROTA ---
+        // Borramos el nombre de la memoria para que no quede rastro al perder.
+        PlayerSession.Clear();
+        // ---------------------------------------------
 
         if (player != null) player.gameObject.SetActive(false);
 
