@@ -25,17 +25,15 @@ public class BossRushManager : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Transform player;
 
-    [Header("Game Over")]
-    [SerializeField] private GameObject gameOverPrefab;
-    [SerializeField] private Vector2 gameOverImageSize = new Vector2(1080f, 870f);
-
-    [Header("Victory")]
-    [SerializeField] private Sprite exitSprite;
+    [Header("UI Panels (Pre-colocados en escena)")]
+    [Tooltip("Panel que se activa al perder")]
+    [SerializeField] private GameObject gameOverPanel;
+    
+    [Tooltip("Panel que se activa al ganar")]
+    [SerializeField] private GameObject victoryPanel;
 
     private PlayerMaskController playerMaskController;
     private PlayerHealth playerHealth;
-    private GameObject gameOverInstance;
-    private VictoryHandler victoryHandler;
     private GameObject gameSceneUI;
 
     private int currentRoundIndex;
@@ -49,10 +47,10 @@ public class BossRushManager : MonoBehaviour
     private void Awake()
     {
         ResolvePlayerReferences();
-
-        victoryHandler = gameObject.AddComponent<VictoryHandler>();
-
-        if (exitSprite != null) victoryHandler.SetExitSprite(exitSprite);
+        
+        // Nos aseguramos de que los paneles empiecen ocultos si se te olvido apagarlos
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (victoryPanel != null) victoryPanel.SetActive(false);
     }
 
     private void Start()
@@ -212,8 +210,27 @@ public class BossRushManager : MonoBehaviour
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
-        // VictoryHandler se encarga de parar el cronometro y registrar la marca en el ranking.
-        if (victoryHandler != null) victoryHandler.TriggerVictory();
+        // Guardamos los datos de victoria
+        if (RunTimer.Active != null)
+        {
+            RunTimer.Active.StopAndRecord();
+            Debug.Log("[BossRushManager] Victoria: Puntuación guardada en el ranking.");
+        }
+
+        // Ocultar UI general si es necesario
+        HideGameplayUI();
+
+        // Mostrar pantalla de victoria
+        if (victoryPanel != null)
+        {
+            victoryPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("[BossRushManager] Panel de victoria no asignado.");
+        }
+
+        GamePause.SetGameFinished(true);
     }
 
     private void OnPlayerDeath()
@@ -235,7 +252,16 @@ public class BossRushManager : MonoBehaviour
 
         DisableCurrentBoss();
         HideGameplayUI();
-        ShowGameOverScreen();
+        
+        // Mostrar pantalla de Game Over
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("[BossRushManager] Panel de Game Over no asignado.");
+        }
 
         GamePause.SetGameFinished(true);
     }
@@ -257,22 +283,5 @@ public class BossRushManager : MonoBehaviour
 
         gameSceneUI = uiObject;
         gameSceneUI.SetActive(false);
-    }
-
-    private void ShowGameOverScreen()
-    {
-        if (gameOverPrefab == null)
-        {
-            Debug.LogWarning("[BossRushManager] gameOverPrefab no esta asignado.", this);
-            return;
-        }
-
-        gameOverInstance = Instantiate(gameOverPrefab);
-
-        Transform imageTransform = gameOverInstance.transform.Find("GameOverImage");
-        if (imageTransform == null) return;
-
-        RectTransform imageRect = imageTransform.GetComponent<RectTransform>();
-        if (imageRect != null) imageRect.sizeDelta = gameOverImageSize;
     }
 }
