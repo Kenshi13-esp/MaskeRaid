@@ -3,12 +3,11 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Barra de vida del boss activo. Se engancha al evento <see cref="BossHealth.ActiveBossChanged"/>
-/// en lugar de comprobar el boss activo en cada fotograma, y solo escribe en la imagen cuando
+/// en lugar de comprobar el boss activo en cada fotograma, y solo escribe en la barra cuando
 /// el relleno cambia para no forzar reconstrucciones del canvas.
 ///
-/// El relleno se configura por codigo (Filled / Horizontal / origen izquierda) para que la barra
-/// vacie siempre desde la derecha y coincida exactamente con la vida restante: dejarlo al ajuste
-/// del inspector era lo que hacia que el dibujo no correspondiera con el dano aplicado.
+/// El estilo visual de la imagen (Simple / Sliced / Tiled / Filled) es el que se deja en el
+/// inspector: este componente ya no lo reescribe. El vaciado se delega en <see cref="HealthBarFill"/>.
 /// </summary>
 public class BossHealthHUD : MonoBehaviour
 {
@@ -30,15 +29,18 @@ public class BossHealthHUD : MonoBehaviour
     [Tooltip("Velocidad con la que la barra persigue la vida real, en fracciones de barra por segundo. 0 = salto instantaneo")]
     [SerializeField] private float fillDrainSpeed = 8f;
 
+    private readonly HealthBarFill barFill = new HealthBarFill();
+
     private BossHealth trackedBoss;
     private float targetFill;
-    private float displayedFill = -1f;
 
     private void Awake()
     {
         if (hudRoot == null) hudRoot = gameObject;
 
-        ConfigureFillImage();
+        if (fillImage == null) Debug.LogError("[BossHealthHUD] Falta la imagen de relleno.", this);
+
+        barFill.Initialize(fillImage);
 
         if (anchorToBottom) ApplyBottomAnchor();
     }
@@ -57,14 +59,14 @@ public class BossHealthHUD : MonoBehaviour
 
     private void Update()
     {
-        if (fillImage == null) return;
-        if (Mathf.Abs(displayedFill - targetFill) <= FillSnapThreshold) return;
+        if (!barFill.IsValid) return;
+        if (Mathf.Abs(barFill.Current - targetFill) <= FillSnapThreshold) return;
 
         // Tiempo real: la barra debe seguir vaciandose durante la congelacion del impacto,
         // que es justo el instante en el que el jugador esta mirando el golpe.
         float step = fillDrainSpeed <= 0f ? 1f : fillDrainSpeed * Time.unscaledDeltaTime;
 
-        ApplyFill(Mathf.MoveTowards(displayedFill, targetFill, step));
+        barFill.Apply(Mathf.MoveTowards(barFill.Current, targetFill, step));
     }
 
     private void TrackBoss(BossHealth boss)
@@ -78,7 +80,7 @@ public class BossHealthHUD : MonoBehaviour
         if (trackedBoss != null)
         {
             trackedBoss.HealthChanged += OnBossHealthChanged;
-            SetFillImmediate(ResolveFill(trackedBoss.CurrentHP, trackedBoss.MaxHP));
+            SetFillImmediate(HealthBarFill.ResolveFill(trackedBoss.CurrentHP, trackedBoss.MaxHP));
         }
         else
         {
@@ -93,42 +95,18 @@ public class BossHealthHUD : MonoBehaviour
 
     private void OnBossHealthChanged(int currentHP, int maxHP)
     {
-        float fill = ResolveFill(currentHP, maxHP);
+        float fill = HealthBarFill.ResolveFill(currentHP, maxHP);
 
         // Solo se anima el vaciado. Rellenar (boss nuevo o vida reiniciada) es instantaneo,
         // porque una barra subiendo lentamente se lee como si el boss se estuviera curando.
-        if (fill > displayedFill) SetFillImmediate(fill);
+        if (fill > barFill.Current) SetFillImmediate(fill);
         else targetFill = fill;
     }
 
     private void SetFillImmediate(float fill)
     {
         targetFill = fill;
-        ApplyFill(fill);
-    }
-
-    private void ApplyFill(float fill)
-    {
-        displayedFill = fill;
-
-        if (fillImage != null) fillImage.fillAmount = fill;
-    }
-
-    private static float ResolveFill(int currentHP, int maxHP)
-    {
-        return maxHP <= 0 ? 0f : Mathf.Clamp01((float)currentHP / maxHP);
-    }
-
-    /// <summary>Fuerza el modo de relleno que hace que la barra represente la vida restante.</summary>
-    private void ConfigureFillImage()
-    {
-        if (fillImage == null) return;
-
-        fillImage.type = Image.Type.Filled;
-        fillImage.fillMethod = Image.FillMethod.Horizontal;
-        fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
-        fillImage.fillCenter = true;
-        fillImage.preserveAspect = false;
+        barFill.Apply(fill);
     }
 
     private void ApplyBottomAnchor()
