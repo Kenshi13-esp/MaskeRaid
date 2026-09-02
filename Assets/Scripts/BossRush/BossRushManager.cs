@@ -1,15 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 /// <summary>
 /// Orquesta el boss rush: instancia los bosses en orden, entrega su mascara al jugador al
-/// derrotarlos y gestiona la victoria y el game over. 
-/// Tambien se comunica con el sistema de Ranking para guardar tiempos o limpiar datos.
+/// derrotarlos y gestiona la victoria y el game over.
 /// </summary>
 public class BossRushManager : MonoBehaviour
 {
     private const string FinalBossNameToken = "Qetza";
+    private const string GameplayUiRootName = "UI";
+    private const string MainMenuSceneName = "MainMenu";
+
+    private static readonly string[] GameplayUiElements =
+    {
+        "HPBoss_BG",
+        "PlayerHealthBar",
+        "RunTimerPanel",
+        "PauseButton",
+        "Pause",
+        "SoundButton"
+    };
 
     [Header("Boss Pool")]
     [Tooltip("Bosses en el orden en el que apareceran")]
@@ -28,13 +41,20 @@ public class BossRushManager : MonoBehaviour
     [Header("UI Panels (Pre-colocados en escena)")]
     [Tooltip("Panel que se activa al perder")]
     [SerializeField] private GameObject gameOverPanel;
-    
+
     [Tooltip("Panel que se activa al ganar")]
     [SerializeField] private GameObject victoryPanel;
 
+    [Tooltip("Etiqueta de tiempo dentro del panel de victoria")]
+    [SerializeField] private TextMeshProUGUI victoryTimerLabel;
+
+    [Header("Redireccion")]
+    [Tooltip("Segundos antes de volver al menu principal tras mostrar el panel de fin")]
+    [SerializeField] private float delayBeforeRedirect = 3f;
+
     private PlayerMaskController playerMaskController;
     private PlayerHealth playerHealth;
-    private GameObject gameSceneUI;
+    private readonly List<GameObject> hiddenUiElements = new List<GameObject>();
 
     private int currentRoundIndex;
     private int totalBossesDefeated;
@@ -47,8 +67,7 @@ public class BossRushManager : MonoBehaviour
     private void Awake()
     {
         ResolvePlayerReferences();
-        
-        // Nos aseguramos de que los paneles empiecen ocultos si se te olvido apagarlos
+
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);
     }
@@ -73,7 +92,7 @@ public class BossRushManager : MonoBehaviour
     private void OnDestroy()
     {
         if (playerHealth != null) playerHealth.OnPlayerDeath.RemoveListener(OnPlayerDeath);
-        if (gameSceneUI != null) gameSceneUI.SetActive(true);
+        RestoreGameplayUi();
     }
 
     private void ResolvePlayerReferences()
@@ -206,33 +225,45 @@ public class BossRushManager : MonoBehaviour
         bossController.ActivateBoss();
     }
 
+    /// <summary>Detiene el cronometro, muestra el panel de victoria y redirige al menu.</summary>
     private void TriggerVictory()
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
-        // Guardamos los datos de victoria
+        string elapsedText = string.Empty;
+        int position = -1;
+
         if (RunTimer.Active != null)
         {
-            RunTimer.Active.StopAndRecord();
-            Debug.Log("[BossRushManager] Victoria: Puntuación guardada en el ranking.");
+            elapsedText = RunTimer.Active.ElapsedText;
+            position = RunTimer.Active.StopAndRecord();
+            Debug.Log($"[BossRushManager] Victoria: {PlayerSession.PlayerName} - {elapsedText}. Puesto {position}.");
         }
 
-        // Ocultar UI general si es necesario
-        HideGameplayUI();
+        HideGameplayUi();
 
-        // Mostrar pantalla de victoria
         if (victoryPanel != null)
         {
             victoryPanel.SetActive(true);
+
+            if (victoryTimerLabel != null)
+            {
+                victoryTimerLabel.text = position > 0
+                    ? $"{elapsedText}\nPUESTO {position}"
+                    : elapsedText;
+            }
         }
         else
         {
-            Debug.LogWarning("[BossRushManager] Panel de victoria no asignado.");
+            Debug.LogWarning("[BossRushManager] Panel de victoria no asignado.", this);
         }
 
         GamePause.SetGameFinished(true);
+
+        StartCoroutine(ReturnToMainMenuAfterDelay());
     }
 
+    /// <summary>Detiene el cronometro, borra el nombre, muestra el panel de derrota y redirige.</summary>
     private void OnPlayerDeath()
     {
         if (isGameOver) return;
@@ -241,29 +272,27 @@ public class BossRushManager : MonoBehaviour
 
         Debug.Log($"[BossRushManager] GAME OVER. Rondas: {currentRoundIndex - 1}. Bosses derrotados: {totalBossesDefeated}.");
 
-        // El cronometro se para antes de tocar la UI, que es lo que lo aloja. La derrota no
-        // registra marca: al ranking solo entran las partidas completadas.
         if (RunTimer.Active != null) RunTimer.Active.Stop();
 
-        // Borra el nombre de la memoria para que no quede rastro al perder.
         PlayerSession.Clear();
 
         if (player != null) player.gameObject.SetActive(false);
 
         DisableCurrentBoss();
-        HideGameplayUI();
-        
-        // Mostrar pantalla de Game Over
+        HideGameplayUi();
+
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(true);
         }
         else
         {
-            Debug.LogWarning("[BossRushManager] Panel de Game Over no asignado.");
+            Debug.LogWarning("[BossRushManager] Panel de Game Over no asignado.", this);
         }
 
         GamePause.SetGameFinished(true);
+
+        StartCoroutine(ReturnToMainMenuAfterDelay());
     }
 
     private void DisableCurrentBoss()
@@ -276,12 +305,43 @@ public class BossRushManager : MonoBehaviour
         currentBossInstance.SetActive(false);
     }
 
-    private void HideGameplayUI()
+    /// <summary>
+    /// Oculta los elementos de HUD de jugabilidad sin apagar el raiz /UI, para que los paneles
+    /// de victoria y derrota (que son hijos de ese raiz) sigan visibles al activarse.
+    /// </summary>
+    private void HideGameplayUi()
     {
-        GameObject uiObject = GameObject.Find("UI");
-        if (uiObject == null) return;
+        GameObject uiRoot = GameObject.Find(GameplayUiRootName);
+        if (uiRoot == null) return;
 
-        gameSceneUI = uiObject;
-        gameSceneUI.SetActive(false);
+        hiddenUiElements.Clear();
+
+        foreach (string elementName in GameplayUiElements)
+        {
+            Transform child = uiRoot.transform.Find(elementName);
+            if (child == null || !child.gameObject.activeSelf) continue;
+
+            child.gameObject.SetActive(false);
+            hiddenUiElements.Add(child.gameObject);
+        }
+    }
+
+    /// <summary>Reactiva los elementos de UI que se ocultaron al terminar la partida.</summary>
+    private void RestoreGameplayUi()
+    {
+        foreach (GameObject element in hiddenUiElements)
+        {
+            if (element != null) element.SetActive(true);
+        }
+
+        hiddenUiElements.Clear();
+    }
+
+    private IEnumerator ReturnToMainMenuAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(delayBeforeRedirect);
+
+        GamePause.ResetState();
+        SceneManager.LoadScene(MainMenuSceneName);
     }
 }
