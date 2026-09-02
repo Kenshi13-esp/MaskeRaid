@@ -134,6 +134,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isLaunched || isDead) return;
         if (invincibilityRoutine != null) return;
+        if (!gameObject.activeInHierarchy) return;
 
         invincibilityRoutine = StartCoroutine(PostDashInvincibilityRoutine());
     }

@@ -29,6 +29,7 @@ public class RunTimer : MonoBehaviour
     [SerializeField] private bool hideUntilFirstBoss = true;
 
     private string lastDisplayedTime;
+    private bool wasRecorded;
 
     /// <summary>Cronometro activo en la escena, o null si no hay ninguno.</summary>
     public static RunTimer Active { get; private set; }
@@ -99,7 +100,8 @@ public class RunTimer : MonoBehaviour
 
     /// <summary>
     /// Detiene el cronometro y guarda la marca en el ranking. Devuelve el puesto conseguido
-    /// empezando en 1, o -1 si no ha entrado en la tabla o la partida nunca arranco.
+    /// empezando en 1, o -1 si no ha entrado en la tabla, la partida nunca arranco o ya se
+    /// habia registrado antes.
     /// </summary>
     public int StopAndRecord()
     {
@@ -107,7 +109,9 @@ public class RunTimer : MonoBehaviour
 
         Stop();
 
-        if (!wasStarted) return -1;
+        if (!wasStarted || wasRecorded) return -1;
+
+        wasRecorded = true;
 
         int position = RankingStore.AddRun(PlayerSession.PlayerName, ElapsedSeconds);
 
@@ -123,6 +127,7 @@ public class RunTimer : MonoBehaviour
         ElapsedSeconds = 0f;
         IsRunning = false;
         HasStarted = false;
+        wasRecorded = false;
         lastDisplayedTime = null;
 
         SetVisible(!hideUntilFirstBoss);

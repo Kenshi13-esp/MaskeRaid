@@ -212,15 +212,7 @@ public class BossRushManager : MonoBehaviour
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
-        // --- AÑADIDO: GESTIÓN DEL RANKING EN VICTORIA ---
-        if (RunTimer.Active != null)
-        {
-            // StopAndRecord detiene el tiempo y guarda los datos (nombre y tiempo) en la base de datos
-            RunTimer.Active.StopAndRecord();
-            Debug.Log("[BossRushManager] Victoria: Puntuación guardada en el ranking.");
-        }
-        // ------------------------------------------------
-
+        // VictoryHandler se encarga de parar el cronometro y registrar la marca en el ranking.
         if (victoryHandler != null) victoryHandler.TriggerVictory();
     }
 
@@ -236,10 +228,8 @@ public class BossRushManager : MonoBehaviour
         // registra marca: al ranking solo entran las partidas completadas.
         if (RunTimer.Active != null) RunTimer.Active.Stop();
 
-        // --- AÑADIDO: GESTIÓN DE SESIÓN EN DERROTA ---
-        // Borramos el nombre de la memoria para que no quede rastro al perder.
+        // Borra el nombre de la memoria para que no quede rastro al perder.
         PlayerSession.Clear();
-        // ---------------------------------------------
 
         if (player != null) player.gameObject.SetActive(false);
 
