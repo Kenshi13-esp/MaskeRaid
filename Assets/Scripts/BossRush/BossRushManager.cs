@@ -222,6 +222,10 @@ public class BossRushManager : MonoBehaviour
 
         Debug.Log($"[BossRushManager] GAME OVER. Rondas: {currentRoundIndex - 1}. Bosses derrotados: {totalBossesDefeated}.");
 
+        // El cronometro se para antes de tocar la UI, que es lo que lo aloja. La derrota no
+        // registra marca: al ranking solo entran las partidas completadas.
+        if (RunTimer.Active != null) RunTimer.Active.Stop();
+
         if (player != null) player.gameObject.SetActive(false);
 
         DisableCurrentBoss();

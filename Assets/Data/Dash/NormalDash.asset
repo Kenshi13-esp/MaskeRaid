@@ -46,7 +46,7 @@ MonoBehaviour:
   pierceWalls: 0
   wallStopSkin: 0.4
   comboDashes: 1
-  dashCooldownAfterCombo: 0.3
+  dashCooldownAfterCombo: 0.8
   damageMultiplier: 1
   maxBounces: 6
   minSpeedAfterBounce: 12

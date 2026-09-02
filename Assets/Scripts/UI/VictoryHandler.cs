@@ -10,10 +10,19 @@ public class VictoryHandler : MonoBehaviour
     [Header("UI Settings")]
     [SerializeField] private Sprite exitSprite;
     [SerializeField] private Vector2 exitImageSize = new Vector2(1296f, 324f);
+
+    [Header("Marca de la partida")]
+    [Tooltip("Muestra el tiempo conseguido y el puesto del ranking bajo el cartel de victoria")]
+    [SerializeField] private bool showRunTime = true;
+
+    [SerializeField] private float runTimeFontSize = 64f;
+    [SerializeField] private float runTimeVerticalOffset = -240f;
     
     private GameObject victoryCanvasInstance;
     private bool victoryTriggered = false;
     private GameObject gameSceneUI;
+    private string runTimeText;
+    private int runPosition = -1;
     
     public void SetExitSprite(Sprite sprite)
     {
@@ -27,7 +36,11 @@ public class VictoryHandler : MonoBehaviour
         victoryTriggered = true;
         
         Debug.Log("[VictoryHandler] ¡VICTORIA! Mostrando pantalla de victoria...");
-        
+
+        // Se para y se registra el cronometro antes de tocar la UI: apagar /UI deshabilita el
+        // cronometro y perderiamos la referencia sin haber guardado la marca.
+        StopAndRecordRun();
+
         SoundManager.PlaySound(SoundType.VICTORY);
         
         GamePause.SetGameFinished(true);
@@ -37,6 +50,16 @@ public class VictoryHandler : MonoBehaviour
         ShowVictoryScreen();
         
         StartCoroutine(ReturnToMainMenuAfterDelay());
+    }
+
+    /// <summary>Detiene el cronometro de la partida y guarda la marca en el ranking local.</summary>
+    private void StopAndRecordRun()
+    {
+        RunTimer timer = RunTimer.Active;
+        if (timer == null) return;
+
+        runPosition = timer.StopAndRecord();
+        runTimeText = timer.ElapsedText;
     }
     
     private void DisableGameSceneUI()
@@ -78,6 +101,10 @@ public class VictoryHandler : MonoBehaviour
         rectTransform.pivot = new Vector2(0.5f, 0.5f);
         
         var image = exitImage.AddComponent<UnityEngine.UI.Image>();
+
+        // El cartel crece y rebota al aparecer. Va en la imagen y no en el canvas porque el
+        // Canvas gobierna su propio RectTransform y la escala del raiz no se respeta.
+        exitImage.AddComponent<PopUpAppearAnimation>();
         
         if (exitSprite != null)
         {
@@ -92,6 +119,37 @@ public class VictoryHandler : MonoBehaviour
         }
         
         victoryCanvasInstance = canvasObj;
+
+        if (showRunTime) CreateRunTimeLabel(canvasObj.transform);
+    }
+
+    /// <summary>
+    /// Anade bajo el cartel el tiempo conseguido y el puesto del ranking. El texto se crea por
+    /// codigo porque el canvas de victoria tambien se construye en tiempo de ejecucion.
+    /// </summary>
+    private void CreateRunTimeLabel(Transform canvasTransform)
+    {
+        if (string.IsNullOrEmpty(runTimeText)) return;
+
+        GameObject labelObject = new GameObject("RunTimeLabel");
+        labelObject.transform.SetParent(canvasTransform, false);
+
+        RectTransform rectTransform = labelObject.AddComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = new Vector2(0f, runTimeVerticalOffset);
+        rectTransform.sizeDelta = new Vector2(1200f, 200f);
+
+        TMPro.TextMeshProUGUI label = labelObject.AddComponent<TMPro.TextMeshProUGUI>();
+        label.fontSize = runTimeFontSize;
+        label.alignment = TMPro.TextAlignmentOptions.Center;
+        label.raycastTarget = false;
+        label.text = runPosition > 0
+            ? $"{PlayerSession.PlayerName}   {runTimeText}\nPUESTO {runPosition}"
+            : $"{PlayerSession.PlayerName}   {runTimeText}";
+
+        labelObject.AddComponent<PopUpAppearAnimation>();
     }
     
     private IEnumerator ReturnToMainMenuAfterDelay()

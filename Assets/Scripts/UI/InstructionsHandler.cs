@@ -85,6 +85,10 @@ public class InstructionsHandler : MonoBehaviour
         instructionsImage.preserveAspect = true;
         instructionsImage.raycastTarget = false;
 
+        // La lamina crece y rebota al aparecer. Va en la imagen y no en el canvas porque el
+        // Canvas gobierna su propio RectTransform y la escala del raiz no se respeta.
+        imageObject.AddComponent<PopUpAppearAnimation>();
+
         instructionsCanvas.SetActive(false);
     }
 

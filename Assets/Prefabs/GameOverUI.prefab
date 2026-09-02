@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1958164828575744973}
   - component: {fileID: 4570283952296492738}
   - component: {fileID: 3925234134426346255}
+  - component: {fileID: 2791885082669964030}
   m_Layer: 0
   m_Name: GameOverImage
   m_TagString: Untagged
@@ -75,6 +76,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2791885082669964030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853668232980286561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664d15087318de74b8780c4699e498d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  duration: 0.55
+  startDelay: 0
+  oscillations: 1.2
+  bounceDamping: 5.5
 --- !u!1 &2394403370593164475
 GameObject:
   m_ObjectHideFlags: 0
@@ -204,6 +221,7 @@ GameObject:
   - component: {fileID: 1692562879373002085}
   - component: {fileID: 4288117050504042686}
   - component: {fileID: 1158216084264882542}
+  - component: {fileID: 1567623033441514746}
   m_Layer: 0
   m_Name: RestartButton
   m_TagString: Untagged
@@ -324,6 +342,22 @@ MonoBehaviour:
           m_StringArgument: GameScene
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1567623033441514746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5430422331114882644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664d15087318de74b8780c4699e498d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  duration: 0.45
+  startDelay: 0.12
+  oscillations: 1.2
+  bounceDamping: 5.5
 --- !u!1 &8828029923526312358
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,6 +370,7 @@ GameObject:
   - component: {fileID: 5019819803489743216}
   - component: {fileID: 253839255859018390}
   - component: {fileID: 3397145691555908894}
+  - component: {fileID: 7876444005466690997}
   m_Layer: 0
   m_Name: ExitButton
   m_TagString: Untagged
@@ -456,3 +491,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
+--- !u!114 &7876444005466690997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8828029923526312358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 664d15087318de74b8780c4699e498d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  duration: 0.45
+  startDelay: 0.12
+  oscillations: 1.2
+  bounceDamping: 5.5
