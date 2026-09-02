@@ -1125,6 +1125,7 @@ GameObject:
   - component: {fileID: 540674178}
   - component: {fileID: 540674177}
   - component: {fileID: 540674176}
+  - component: {fileID: 540674179}
   m_Layer: 5
   m_Name: ReturnMainMenu
   m_TagString: Untagged
@@ -1170,7 +1171,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 857676432}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 857676432}
-  m_Transition: 1
+  m_Transition: 3
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -1227,7 +1228,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -4362334473669060941, guid: 97300073baf31aa4d89a874ca5b4191d, type: 3}
+  m_Sprite: {fileID: 1934483396863357842, guid: 15166264727b0f04284262b47f2289d0, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1245,6 +1246,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 540674174}
   m_CullTransparentMesh: 1
+--- !u!95 &540674179
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540674174}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 2338720257853608018, guid: 15166264727b0f04284262b47f2289d0, type: 3}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &557131592
 GameObject:
   m_ObjectHideFlags: 0
@@ -1435,7 +1458,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1160729590564846626, guid: d062def4af115b149bb4a34ef7e19ced, type: 3}
+  m_Sprite: {fileID: -5456975988694585887, guid: 36643953fa398df42a95fadead26898f, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1810,7 +1833,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2204991055137215863, guid: 4e2643dd83e4e8c46ad0b981bc3ac488, type: 3}
+  m_Sprite: {fileID: 4199014143827146688, guid: c2bf4f772cd818845b0d3fc62e519c54, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2946,7 +2969,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 540674176}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 3
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -3003,7 +3026,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 8788188395881337267, guid: dae61d1282c31d74c980fc1ed9468e7e, type: 3}
+  m_Sprite: {fileID: 5087667371306134477, guid: fc6217c7234961b48a34a3362ff959e8, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
