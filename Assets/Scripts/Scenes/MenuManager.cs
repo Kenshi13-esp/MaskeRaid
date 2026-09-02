@@ -13,6 +13,11 @@ public class MenuManager : MonoBehaviour
         SceneManager.LoadScene("GameScene");
     }
 
+    public void LoreScene()
+    {
+        SceneManager.LoadScene("LoreScene");
+    }
+
     public void Quit()
     {
         Application.Quit();

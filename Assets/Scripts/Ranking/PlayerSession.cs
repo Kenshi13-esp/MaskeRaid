@@ -52,4 +52,13 @@ public static class PlayerSession
 
         return builder.ToString();
     }
+
+    /// <summary>
+    /// Borra el nombre guardado de la memoria en caso de derrota.
+    /// </summary>
+    public static void Clear()
+    {
+        PlayerPrefs.DeleteKey(NameKey);
+        PlayerPrefs.Save();
+    }
 }
