@@ -26,6 +26,7 @@ public class DamageFlashEffect : MonoBehaviour
     private Color[] originalColors;
     private WaitForSeconds flashWait;
     private Coroutine flashCoroutine;
+    private bool isFlashing;
 
     private static Material FlashMaterial
     {
@@ -78,6 +79,30 @@ public class DamageFlashEffect : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Cambia el color base de un sprite concreto. Es la via correcta para los cambios de fase:
+    /// escribir <c>renderer.color</c> a pelo se pierde si hay un destello en curso, porque al
+    /// terminar restaura el color que tenia guardado. Con el destello activo el color nuevo
+    /// queda pendiente y se aplica al restaurar, en lugar de parpadear.
+    /// </summary>
+    public void SetBaseColor(SpriteRenderer renderer, Color color)
+    {
+        if (renderer == null) return;
+
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != renderer) continue;
+
+            originalColors[i] = color;
+
+            if (!isFlashing) renderer.color = color;
+            return;
+        }
+
+        // El sprite no lo gestiona este destello: se tine directamente.
+        renderer.color = color;
+    }
+
     private IEnumerator FlashCoroutine()
     {
         Material flashMaterial = FlashMaterial;
@@ -86,10 +111,15 @@ public class DamageFlashEffect : MonoBehaviour
         {
             if (spriteRenderers[i] == null) continue;
 
-            originalColors[i] = spriteRenderers[i].color;
+            // Solo se captura el color base si no venimos de un destello interrumpido: en ese
+            // caso lo que hay en pantalla es el color del destello, no el color real del sprite.
+            if (!isFlashing) originalColors[i] = spriteRenderers[i].color;
+
             spriteRenderers[i].sharedMaterial = flashMaterial;
             spriteRenderers[i].color = flashColor;
         }
+
+        isFlashing = true;
 
         yield return flashWait;
 
@@ -101,6 +131,7 @@ public class DamageFlashEffect : MonoBehaviour
             spriteRenderers[i].color = originalColors[i];
         }
 
+        isFlashing = false;
         flashCoroutine = null;
     }
 }

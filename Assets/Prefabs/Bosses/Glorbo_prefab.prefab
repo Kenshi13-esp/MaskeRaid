@@ -83,6 +83,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 100
   hitCooldown: 0.5
+  knockbackForceMultiplier: 1
 --- !u!1 &7124204006009251031
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +228,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 1000
+  maxHP: 3000
   maskReward: {fileID: 11400000, guid: 2803ac7d0b543f94f92d2bd88b665ac4, type: 2}
   OnBossDeath:
     m_PersistentCalls:
@@ -480,6 +481,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 100
   hitCooldown: 0.5
+  knockbackForceMultiplier: 1
 --- !u!1 &8770539837452124410
 GameObject:
   m_ObjectHideFlags: 0

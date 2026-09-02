@@ -22,6 +22,9 @@ public class BossGlorboController : MonoBehaviour, IBossController
     [SerializeField] private float phase2_chargeUpTime = 0.4f;
     [SerializeField] private float phase2_timeBetweenDashes = 0.5f;
     [SerializeField] private Color phase2_color = Color.red;
+
+    [Tooltip("Fraccion de vida a la que entra en fase 2 (0.5 = a la mitad justa)")]
+    [Range(0f, 1f)]
     [SerializeField] private float phase2_healthPercent = 0.5f;
     [Tooltip("Perfil de dash que se aplica al entrar en fase 2. Vacio = mantiene el de fase 1")]
     [SerializeField] private DashProfile phase2DashProfile;
@@ -67,12 +70,22 @@ public class BossGlorboController : MonoBehaviour, IBossController
         StartCoroutine(BossLoop());
     }
 
+    /// <summary>
+    /// El cambio de fase se comprueba cada fotograma y no al empezar cada embestida: asi entra
+    /// en fase 2 en el golpe exacto que baja la vida a la mitad, sin esperar a que acabe el
+    /// ciclo de ataque en curso.
+    /// </summary>
+    private void Update()
+    {
+        if (!isActive || isPhase2 || bossHealth.IsDead) return;
+
+        CheckPhaseTransition();
+    }
+
     private IEnumerator BossLoop()
     {
         while (isActive && !bossHealth.IsDead)
         {
-            CheckPhaseTransition();
-
             FacePlayer();
             yield return new WaitForSeconds(ChargeUpTime);
 
@@ -102,14 +115,31 @@ public class BossGlorboController : MonoBehaviour, IBossController
     private void CheckPhaseTransition()
     {
         if (isPhase2) return;
-        if (bossHealth.CurrentHP > bossHealth.MaxHP * phase2_healthPercent) return;
+        if (!bossHealth.IsAtOrBelowRatio(phase2_healthPercent)) return;
 
         isPhase2 = true;
 
         SoundManager.PlaySound(SoundType.BOSS_PHASE_CHANGE);
 
-        if (dashActor.SpriteRenderer != null) dashActor.SpriteRenderer.color = phase2_color;
+        ApplyPhase2Color();
+
         if (phase2DashProfile != null) dashMove.Profile = phase2DashProfile;
+    }
+
+    /// <summary>
+    /// Tine al boss a traves del destello de daño. La fase cambia en el mismo fotograma del
+    /// golpe, asi que el destello esta activo: escribir el color a pelo se perderia al
+    /// restaurarse el destello.
+    /// </summary>
+    private void ApplyPhase2Color()
+    {
+        SpriteRenderer spriteRenderer = dashActor.SpriteRenderer;
+        if (spriteRenderer == null) return;
+
+        DamageFlashEffect damageFlash = GetComponent<DamageFlashEffect>();
+
+        if (damageFlash != null) damageFlash.SetBaseColor(spriteRenderer, phase2_color);
+        else spriteRenderer.color = phase2_color;
     }
 
     private void FacePlayer()

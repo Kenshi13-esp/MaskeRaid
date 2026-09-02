@@ -55,6 +55,9 @@ public class BossQetzaController : MonoBehaviour, IBossController
     [Header("Phase Two")]
     [SerializeField] private Color phaseTwoColor = Color.red;
     [SerializeField] private float phaseTwoSpeedMultiplier = 1.4f;
+
+    [Tooltip("Fraccion de vida a la que entra en fase 2 (0.5 = a la mitad justa)")]
+    [Range(0f, 1f)]
     [SerializeField] private float phaseTwoHealthPercent = 0.5f;
     [Tooltip("Perfil de dash que se aplica al entrar en fase 2. Vacio = mantiene el de fase 1")]
     [SerializeField] private DashProfile phaseTwoDashProfile;
@@ -140,6 +143,10 @@ public class BossQetzaController : MonoBehaviour, IBossController
     private void Update()
     {
         if (dashMove != null && dashMove.IsDashing) CheckDashCollision(dashMove.CurrentDirection);
+
+        // El cambio de fase se comprueba cada fotograma y no al empezar cada patron: asi entra
+        // en fase 2 en el golpe exacto que baja la vida a la mitad.
+        if (isActive && !isPhaseTwo && !bossHealth.IsDead) CheckPhaseTransition();
     }
     
     private void CalculateArenaBounds()
@@ -241,8 +248,6 @@ public class BossQetzaController : MonoBehaviour, IBossController
 
         while (isActive && !bossHealth.IsDead)
         {
-            CheckPhaseTransition();
-
             int jumpCount = isPhaseTwo ? jumpsPhaseTwo : jumpsPhaseOne;
             for (int i = 0; i < jumpCount; i++)
             {
@@ -267,14 +272,19 @@ public class BossQetzaController : MonoBehaviour, IBossController
 
     private void CheckPhaseTransition()
     {
-        if (isPhaseTwo || bossHealth.CurrentHP > bossHealth.MaxHP * phaseTwoHealthPercent) return;
+        if (isPhaseTwo || !bossHealth.IsAtOrBelowRatio(phaseTwoHealthPercent)) return;
 
         isPhaseTwo = true;
         speedMultiplier = phaseTwoSpeedMultiplier;
 
         if (spriteRenderer != null)
         {
-            spriteRenderer.color = phaseTwoColor;
+            // A traves del destello: la fase cambia en el fotograma del golpe, con el destello
+            // activo, y un color escrito a pelo se perderia al restaurarse.
+            DamageFlashEffect damageFlash = GetComponent<DamageFlashEffect>();
+
+            if (damageFlash != null) damageFlash.SetBaseColor(spriteRenderer, phaseTwoColor);
+            else spriteRenderer.color = phaseTwoColor;
         }
 
         if (phaseTwoDashProfile != null) dashMove.Profile = phaseTwoDashProfile;

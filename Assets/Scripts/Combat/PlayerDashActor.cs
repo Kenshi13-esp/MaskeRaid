@@ -24,12 +24,23 @@ public class PlayerDashActor : DashActor
         }
     }
 
-    public override void SetDashDamageActive(bool active, float damageMultiplier)
+    public override void SetDashDamageActive(bool active, DashProfile profile)
     {
         if (dashHitbox == null) return;
 
-        if (active) dashHitbox.BeginDash(damageMultiplier);
+        if (active) dashHitbox.BeginDash(profile);
         else dashHitbox.EndDash();
+    }
+
+    /// <summary>
+    /// Marca el siguiente ataque como especial, para que la hitbox aplique el dano y el golpeo
+    /// fijos del especial en lugar de los del perfil de la mascara.
+    /// </summary>
+    public void SetSpecialDash(bool isSpecial)
+    {
+        if (dashHitbox == null) return;
+
+        dashHitbox.SetSpecialDash(isSpecial);
     }
 
     public override void SetInvulnerable(bool invulnerable)
