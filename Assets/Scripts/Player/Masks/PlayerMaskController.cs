@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -9,6 +10,11 @@ using UnityEngine;
 ///
 /// Es el punto de union entre el sistema de bosses y el jugador: el mismo
 /// <see cref="DashMoveBase"/> que usa el boss acaba ejecutandose aqui.
+///
+/// Hay dos tipos de poder robado y no se comportan igual. El dash es exclusivo: solo se
+/// ejecuta el de la mascara puesta. Las mejoras permanentes (por ahora las cargas extra del
+/// especial) se acumulan al conseguir la mascara y se conservan el resto de la partida aunque
+/// luego se equipe otra, porque el jugador ya se ha quedado con ese poder.
 /// </summary>
 [RequireComponent(typeof(PlayerDashActor))]
 public class PlayerMaskController : MonoBehaviour
@@ -36,6 +42,8 @@ public class PlayerMaskController : MonoBehaviour
     [Tooltip("Color del destello al conseguir una mascara nueva")]
     [SerializeField] private Color powerUpColor = new Color(0.3f, 1f, 0.3f, 1f);
 
+    private readonly HashSet<MaskDefinition> collectedMasks = new HashSet<MaskDefinition>();
+
     private InstructionsHandler instructionsHandler;
     private RuntimeAnimatorController defaultAnimatorController;
     private Vector3 defaultScale;
@@ -43,6 +51,18 @@ public class PlayerMaskController : MonoBehaviour
 
     /// <summary>Se dispara cada vez que el jugador equipa una mascara distinta.</summary>
     public event Action<MaskDefinition> MaskEquipped;
+
+    /// <summary>
+    /// Se dispara cuando cambia el total de cargas extra del especial, al conseguir una mascara
+    /// que las otorga.
+    /// </summary>
+    public event Action<int> ExtraSpecialChargesChanged;
+
+    /// <summary>
+    /// Cargas extra del especial acumuladas por todas las mascaras conseguidas. Es permanente:
+    /// no se pierde al cambiar de mascara.
+    /// </summary>
+    public int ExtraSpecialCharges { get; private set; }
 
     /// <summary>Mascara equipada actualmente.</summary>
     public MaskDefinition CurrentMask { get; private set; }
@@ -52,6 +72,12 @@ public class PlayerMaskController : MonoBehaviour
 
     /// <summary>Ajustes del dash activo.</summary>
     public DashProfile CurrentProfile => CurrentMove != null ? CurrentMove.Profile : null;
+
+    /// <summary>
+    /// True mientras dura el pulso visual de mascara nueva. Ese feedback escribe en la escala
+    /// del jugador, asi que quien tambien la deforme debe cederle el turno.
+    /// </summary>
+    public bool IsPlayingPowerUpFeedback => feedbackRoutine != null;
 
     private void Awake()
     {
@@ -83,6 +109,10 @@ public class PlayerMaskController : MonoBehaviour
             return;
         }
 
+        // Las mejoras permanentes se registran aunque la mascara ya estuviera puesta: primero se
+        // acumulan y solo despues se descarta el trabajo de equipar.
+        CollectPermanentUpgrades(mask);
+
         if (CurrentMask == mask) return;
 
         CurrentMask = mask;
@@ -100,6 +130,22 @@ public class PlayerMaskController : MonoBehaviour
         MaskEquipped?.Invoke(mask);
 
         Debug.Log($"[PlayerMask] Mascara equipada: {mask.MaskName} ({mask.DashMoveKind}).");
+    }
+
+    /// <summary>
+    /// Suma las mejoras permanentes de una mascara la primera vez que se consigue. Las siguientes
+    /// veces no vuelve a sumarlas, para que reequipar una mascara ya obtenida no acumule cargas.
+    /// </summary>
+    private void CollectPermanentUpgrades(MaskDefinition mask)
+    {
+        if (!collectedMasks.Add(mask)) return;
+        if (mask.ExtraSpecialCharges <= 0) return;
+
+        ExtraSpecialCharges += mask.ExtraSpecialCharges;
+        ExtraSpecialChargesChanged?.Invoke(ExtraSpecialCharges);
+
+        Debug.Log($"[PlayerMask] {mask.MaskName} otorga +{mask.ExtraSpecialCharges} carga(s) " +
+                  $"de especial. Total permanente: +{ExtraSpecialCharges}.");
     }
 
     private void ApplyDashMove(MaskDefinition mask)

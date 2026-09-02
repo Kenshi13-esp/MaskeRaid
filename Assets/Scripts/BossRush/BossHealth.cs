@@ -37,6 +37,19 @@ public class BossHealth : MonoBehaviour
     public int MaxHP => maxHP;
     public MaskDefinition MaskReward => maskReward;
 
+    /// <summary>Vida restante entre 0 y 1. Es la referencia de los cambios de fase.</summary>
+    public float HealthRatio => maxHP <= 0 ? 0f : Mathf.Clamp01((float)hp / maxHP);
+
+    /// <summary>
+    /// True cuando la vida ha bajado a la fraccion indicada o por debajo. Se usa para disparar
+    /// las fases en un porcentaje de la vida y no en un numero absoluto de puntos, que se
+    /// desajusta cada vez que se cambia la vida maxima del boss.
+    /// </summary>
+    public bool IsAtOrBelowRatio(float ratio)
+    {
+        return HealthRatio <= ratio;
+    }
+
     private void Awake()
     {
         hp = maxHP;

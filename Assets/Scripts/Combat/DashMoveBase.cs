@@ -98,10 +98,11 @@ public abstract class DashMoveBase : MonoBehaviour
     {
         Actor.FaceDirection(request.Direction);
         Actor.SetInvulnerable(true);
-        Actor.SetDashDamageActive(true, profile.DamageMultiplier);
+        Actor.SetDashDamageActive(true, profile);
         Actor.PlayDashSound(profile.DashSoundType);
         Actor.SetAnimatorTrigger(profile.DashAnimatorTrigger);
         SpawnDashVfx();
+        ShakeCameraOnStart();
     }
 
     /// <summary>Devuelve el actor a su estado normal al terminar o cancelar el dash.</summary>
@@ -113,7 +114,7 @@ public abstract class DashMoveBase : MonoBehaviour
 
         if (Body != null) Body.linearVelocity = Vector2.zero;
 
-        Actor.SetDashDamageActive(false, 1f);
+        Actor.SetDashDamageActive(false, null);
         Actor.SetInvulnerable(false);
         Actor.StopDashSound();
 
@@ -171,7 +172,11 @@ public abstract class DashMoveBase : MonoBehaviour
         return Mathf.Max(MinimumDashDuration, distance / profile.DashSpeed);
     }
 
-    /// <summary>Desplaza el cuerpo hasta el destino de forma continua en pasos de fisica.</summary>
+    /// <summary>
+    /// Desplaza el cuerpo hasta el destino de forma continua en pasos de fisica. El reparto de
+    /// la distancia lo marca la curva del perfil, para que el dash salga disparado y decelere
+    /// en lugar de recorrer el trayecto a velocidad constante.
+    /// </summary>
     protected IEnumerator MoveTo(Vector2 destination, float duration)
     {
         Rigidbody2D body = Body;
@@ -190,7 +195,11 @@ public abstract class DashMoveBase : MonoBehaviour
             yield return WaitForPhysicsStep;
 
             elapsed += Time.fixedDeltaTime;
-            body.MovePosition(Vector2.Lerp(origin, destination, Mathf.Clamp01(elapsed / duration)));
+
+            // Lerp acotado a proposito: una curva con sobreimpulso no debe pasar del destino,
+            // que es donde el dash ya se ha recortado para no atravesar la pared.
+            float progress = profile.EvaluateDashProgress(Mathf.Clamp01(elapsed / duration));
+            body.MovePosition(Vector2.Lerp(origin, destination, progress));
         }
 
         body.MovePosition(destination);
@@ -201,6 +210,13 @@ public abstract class DashMoveBase : MonoBehaviour
     {
         if (profile == null || profile.CameraShakeDuration <= 0f) return;
         CameraShake.Shake(profile.CameraShakeDuration, profile.CameraShakeMagnitude);
+    }
+
+    /// <summary>Sacudida corta al salir disparado. Marca el arranque del dash.</summary>
+    private void ShakeCameraOnStart()
+    {
+        if (profile == null || profile.StartShakeDuration <= 0f) return;
+        CameraShake.Shake(profile.StartShakeDuration, profile.StartShakeMagnitude);
     }
 
     private IEnumerator RunDash(DashRequest request)

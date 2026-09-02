@@ -24,6 +24,12 @@ public class MaskDefinition : ScriptableObject
     [Tooltip("Ajustes del dash cuando lo ejecuta el jugador")]
     [SerializeField] private DashProfile dashProfile;
 
+    [Header("Mejora permanente")]
+    [Tooltip("Cargas extra del especial que esta mascara anade para el resto de la partida. " +
+             "Se acumulan y se conservan al cambiar de mascara")]
+    [Min(0)]
+    [SerializeField] private int extraSpecialCharges = 0;
+
     [Header("Visuales del jugador")]
     [Tooltip("Animator del jugador con esta mascara. Vacio = mantiene el original")]
     [SerializeField] private RuntimeAnimatorController animatorController;
@@ -36,6 +42,9 @@ public class MaskDefinition : ScriptableObject
     public Sprite MaskSprite => maskSprite;
     public DashMoveKind DashMoveKind => dashMoveKind;
     public DashProfile DashProfile => dashProfile;
+
+    /// <summary>Cargas extra del especial que esta mascara anade de forma permanente.</summary>
+    public int ExtraSpecialCharges => Mathf.Max(0, extraSpecialCharges);
     public RuntimeAnimatorController AnimatorController => animatorController;
     public Sprite InstructionsSprite => instructionsSprite;
 }

@@ -18,18 +18,46 @@ MonoBehaviour:
   dashSpeed: 22
   minDashDistance: 8
   maxDashDistance: 60
+  dashCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 2.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.25
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   stopDistanceFromTarget: 0.5
   pierceWalls: 0
   wallStopSkin: 0.6
   comboDashes: 1
-  dashCooldownAfterCombo: 1.2
-  damageMultiplier: 1.5
+  dashCooldownAfterCombo: 2.5
+  damageMultiplier: 3
   maxBounces: 6
   minSpeedAfterBounce: 12
   maxSpeedClamp: 18
   bounceMaterial: {fileID: 0}
-  cameraShakeDuration: 0.2
-  cameraShakeMagnitude: 0.25
+  startShakeDuration: 0.07
+  startShakeMagnitude: 0.09
+  hitStopDuration: 0.14
+  hitStopTimeScale: 0
+  cameraShakeDuration: 0.24
+  cameraShakeMagnitude: 0.34
   dashAnimatorTrigger: Dash
   endAnimatorTrigger: 
   dashSoundType: 7

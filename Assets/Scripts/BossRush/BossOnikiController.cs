@@ -15,7 +15,9 @@ public class BossOnikiController : MonoBehaviour, IBossController
     [SerializeField] private Transform player;
 
     [Header("Phase Management")]
-    [SerializeField] private int phase2HPThreshold = 3;
+    [Tooltip("Fraccion de vida a la que entra en fase 2 (0.5 = a la mitad justa)")]
+    [Range(0f, 1f)]
+    [SerializeField] private float phase2HealthPercent = 0.5f;
     [SerializeField] private float phaseTransitionDelay = 1f;
     [Tooltip("Perfil de dash que se aplica al entrar en fase 2. Vacio = mantiene el de fase 1")]
     [SerializeField] private DashProfile phase2DashProfile;
@@ -79,7 +81,7 @@ public class BossOnikiController : MonoBehaviour, IBossController
     {
         if (!isActive || isPhase2 || bossHealth.IsDead) return;
 
-        if (bossHealth.CurrentHP <= phase2HPThreshold) StartCoroutine(TransitionToPhase2());
+        if (bossHealth.IsAtOrBelowRatio(phase2HealthPercent)) StartCoroutine(TransitionToPhase2());
     }
 
     private IEnumerator BossLoop()
@@ -136,8 +138,10 @@ public class BossOnikiController : MonoBehaviour, IBossController
 
         if (dashActor.SpriteRenderer != null)
         {
-            dashActor.SpriteRenderer.color = phase2Color;
-            if (damageFlashEffect != null) damageFlashEffect.UpdateBaseColors();
+            // A traves del destello: la fase cambia en el fotograma del golpe, con el destello
+            // activo, y un color escrito a pelo se perderia al restaurarse.
+            if (damageFlashEffect != null) damageFlashEffect.SetBaseColor(dashActor.SpriteRenderer, phase2Color);
+            else dashActor.SpriteRenderer.color = phase2Color;
         }
 
         if (phase2DashProfile != null) dashMove.Profile = phase2DashProfile;

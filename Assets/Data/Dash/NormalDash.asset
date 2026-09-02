@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 699dfa5e0bd7401489b40c46ee7d8aa6, type: 3}
-  m_Name: JellyDash
+  m_Name: NormalDash
   m_EditorClassIdentifier: 
-  maxChargeTime: 0.5
-  dashDuration: 0.9
+  maxChargeTime: 0
+  dashDuration: 0.09
   useFixedSpeed: 0
   dashSpeed: 16
-  minDashDistance: 2
-  maxDashDistance: 8
+  minDashDistance: 4
+  maxDashDistance: 4
   dashCurve:
     serializedVersion: 2
     m_Curve:
@@ -46,20 +46,20 @@ MonoBehaviour:
   pierceWalls: 0
   wallStopSkin: 0.4
   comboDashes: 1
-  dashCooldownAfterCombo: 2.5
-  damageMultiplier: 3
+  dashCooldownAfterCombo: 0.3
+  damageMultiplier: 1
   maxBounces: 6
   minSpeedAfterBounce: 12
   maxSpeedClamp: 18
-  bounceMaterial: {fileID: 6200000, guid: 1559867ce6220e941b71c77afad568fc, type: 2}
-  startShakeDuration: 0.05
-  startShakeMagnitude: 0.06
-  hitStopDuration: 0.14
+  bounceMaterial: {fileID: 0}
+  startShakeDuration: 0.03
+  startShakeMagnitude: 0.04
+  hitStopDuration: 0.035
   hitStopTimeScale: 0
-  cameraShakeDuration: 0.24
-  cameraShakeMagnitude: 0.34
+  cameraShakeDuration: 0.06
+  cameraShakeMagnitude: 0.07
   dashAnimatorTrigger: Dash
   endAnimatorTrigger: 
-  dashSoundType: 4
-  dashVfxPrefab: {fileID: 0}
+  dashSoundType: 12
+  dashVfxPrefab: {fileID: 201986757626793169, guid: 9e9e10ab936098246903254f67c1d805, type: 3}
   dashVfxLifetime: 1

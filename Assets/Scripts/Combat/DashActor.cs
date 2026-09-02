@@ -121,8 +121,11 @@ public abstract class DashActor : MonoBehaviour
         Animator.SetTrigger(triggerName);
     }
 
-    /// <summary>Activa o desactiva la ventana de dano del dash.</summary>
-    public virtual void SetDashDamageActive(bool active, float damageMultiplier) { }
+    /// <summary>
+    /// Activa o desactiva la ventana de dano del dash. El perfil llega para que el dano y el
+    /// feedback de impacto salgan de los mismos datos; al desactivar puede ser nulo.
+    /// </summary>
+    public virtual void SetDashDamageActive(bool active, DashProfile profile) { }
 
     /// <summary>Activa o desactiva la invulnerabilidad mientras dura el dash.</summary>
     public virtual void SetInvulnerable(bool invulnerable) { }

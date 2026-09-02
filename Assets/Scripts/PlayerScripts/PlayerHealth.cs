@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// Vida del jugador, retroceso al recibir dano e invulnerabilidades. Notifica los cambios de
@@ -26,6 +27,14 @@ public class PlayerHealth : MonoBehaviour
     [Header("Post-Dash Invincibility")]
     [Tooltip("Tiempo de invulnerabilidad despues del dash (segundos)")]
     [SerializeField] private float postDashInvincibilityTime = 0.15f;
+
+    [Header("Vibracion al recibir dano")]
+    [Tooltip("Intensidad de la vibracion del mando al recibir un impacto")]
+    [Range(0f, 1f)]
+    [SerializeField] private float hitRumbleIntensity = 0.4f;
+
+    [Tooltip("Duracion de la vibracion al recibir un impacto (segundos reales)")]
+    [SerializeField] private float hitRumbleDuration = 0.12f;
 
     [Header("Events")]
     public UnityEvent OnPlayerDeath;
@@ -101,6 +110,7 @@ public class PlayerHealth : MonoBehaviour
 
         SoundManager.PlaySound(SoundType.PLAYER_HIT);
         HealthChanged?.Invoke(hp, maxHP);
+        StartCoroutine(HitRumbleRoutine());
 
         if (hp <= 0)
         {
@@ -240,5 +250,19 @@ public class PlayerHealth : MonoBehaviour
 
         isInvincible = false;
         invincibilityRoutine = null;
+    }
+
+    /// <summary>Golpe corto de vibracion del mando al recibir un impacto del boss.</summary>
+    private IEnumerator HitRumbleRoutine()
+    {
+        Gamepad gamepad = Gamepad.current;
+        if (gamepad == null || hitRumbleIntensity <= 0f || hitRumbleDuration <= 0f) yield break;
+
+        gamepad.SetMotorSpeeds(hitRumbleIntensity, hitRumbleIntensity);
+
+        // En tiempo real para que se note igual aunque el impacto dispare un hit stop.
+        yield return new WaitForSecondsRealtime(hitRumbleDuration);
+
+        if (Gamepad.current == gamepad) gamepad.ResetHaptics();
     }
 }

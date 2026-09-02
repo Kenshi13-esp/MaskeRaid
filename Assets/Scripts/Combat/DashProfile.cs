@@ -28,6 +28,11 @@ public class DashProfile : ScriptableObject
     [Tooltip("Distancia recorrida con la carga completa")]
     [SerializeField] private float maxDashDistance = 9f;
 
+    [Tooltip("Reparto de la distancia a lo largo del dash. Por defecto sale disparado y frena al final")]
+    [SerializeField] private AnimationCurve dashCurve = new AnimationCurve(
+        new Keyframe(0f, 0f, 0f, 2.2f),
+        new Keyframe(1f, 1f, 0.25f, 0f));
+
     [Header("Objetivo")]
     [Tooltip("Distancia a la que el dash se detiene al perseguir un objetivo")]
     [SerializeField] private float stopDistanceFromTarget = 0.5f;
@@ -63,7 +68,21 @@ public class DashProfile : ScriptableObject
     [Tooltip("Material de fisica aplicado mientras se rebota. Vacio = mantiene el del actor")]
     [SerializeField] private PhysicsMaterial2D bounceMaterial;
 
+    [Header("Arranque")]
+    [Tooltip("Duracion del temblor de camara al salir disparado (0 = sin temblor)")]
+    [SerializeField] private float startShakeDuration = 0f;
+
+    [Tooltip("Intensidad del temblor de camara al salir disparado")]
+    [SerializeField] private float startShakeMagnitude = 0.06f;
+
     [Header("Impacto")]
+    [Tooltip("Congelacion del juego al conectar el golpe, en segundos reales (0 = sin congelacion)")]
+    [SerializeField] private float hitStopDuration = 0.06f;
+
+    [Tooltip("Escala de tiempo durante la congelacion del impacto. 0 = el mundo se para del todo")]
+    [Range(0f, 1f)]
+    [SerializeField] private float hitStopTimeScale = 0f;
+
     [Tooltip("Duracion del temblor de camara al impactar (0 = sin temblor)")]
     [SerializeField] private float cameraShakeDuration = 0f;
 
@@ -105,9 +124,25 @@ public class DashProfile : ScriptableObject
     public PhysicsMaterial2D BounceMaterial => bounceMaterial;
     public float CameraShakeDuration => cameraShakeDuration;
     public float CameraShakeMagnitude => cameraShakeMagnitude;
+    public float StartShakeDuration => startShakeDuration;
+    public float StartShakeMagnitude => startShakeMagnitude;
+    public float HitStopDuration => hitStopDuration;
+    public float HitStopTimeScale => hitStopTimeScale;
     public string DashAnimatorTrigger => dashAnimatorTrigger;
     public string EndAnimatorTrigger => endAnimatorTrigger;
     public SoundType DashSoundType => dashSoundType;
     public GameObject DashVfxPrefab => dashVfxPrefab;
     public float DashVfxLifetime => dashVfxLifetime;
+
+    /// <summary>
+    /// Fraccion del recorrido completada en un instante normalizado del dash. Es lo que da el
+    /// punch a la salida: con la curva por defecto la mayor parte de la distancia se cubre al
+    /// principio y el final decelera. Cae a un reparto lineal si la curva se queda sin claves.
+    /// </summary>
+    public float EvaluateDashProgress(float normalizedTime)
+    {
+        if (dashCurve == null || dashCurve.length < 2) return normalizedTime;
+
+        return dashCurve.Evaluate(normalizedTime);
+    }
 }
