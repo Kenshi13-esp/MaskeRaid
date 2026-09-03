@@ -17,6 +17,8 @@ public class DashComboHUD : MonoBehaviour
     [SerializeField] private Image[] dashPips = new Image[0];
 
     [Header("Follow (World Space UI)")]
+    [Tooltip("Si esta activo, el indicador sigue al jugador en el mundo. Desactivarlo para anclarlo a un elemento del HUD en pantalla.")]
+    [SerializeField] private bool followPlayer = true;
     [SerializeField] private Transform followTarget;
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 0.45f, 0f);
     [SerializeField] private bool lockRotation = true;
@@ -30,13 +32,13 @@ public class DashComboHUD : MonoBehaviour
 
     private void Awake()
     {
-        if (followTarget == null && dash != null) followTarget = dash.transform;
+        if (followPlayer && followTarget == null && dash != null) followTarget = dash.transform;
         if (visualRoot == null) visualRoot = gameObject;
     }
 
     private void LateUpdate()
     {
-        FollowTarget();
+        if (followPlayer) FollowTarget();
 
         if (dash == null) return;
 

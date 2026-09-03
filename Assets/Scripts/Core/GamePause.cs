@@ -19,8 +19,11 @@ public static class GamePause
     /// <summary>True cuando la partida ha terminado (game over o victoria).</summary>
     public static bool IsGameFinished { get; private set; }
 
+    /// <summary>True mientras una intro cinematica congela el juego sin abrir el menu de pausa.</summary>
+    public static bool IsGameplayFrozen { get; private set; }
+
     /// <summary>True cuando la jugabilidad no debe responder a la entrada del jugador.</summary>
-    public static bool IsGameplayBlocked => IsPaused || IsGameFinished;
+    public static bool IsGameplayBlocked => IsPaused || IsGameFinished || IsGameplayFrozen;
 
     /// <summary>Pausa o reanuda la partida. Se ignora si la partida ya ha terminado.</summary>
     public static void SetPaused(bool paused)
@@ -43,7 +46,19 @@ public static class GamePause
             PauseChanged?.Invoke(false);
         }
 
-        Time.timeScale = finished ? FrozenTimeScale : RunningTimeScale;
+        Time.timeScale = (finished || IsGameplayFrozen) ? FrozenTimeScale : RunningTimeScale;
+    }
+
+    /// <summary>
+    /// Congela o descongela la jugabilidad para intros cinematicas (spawn de bosses, etc.).
+    /// A diferencia de <see cref="SetPaused"/>, no abre ni cierra el menu de pausa.
+    /// </summary>
+    public static void SetGameplayFrozen(bool frozen)
+    {
+        IsGameplayFrozen = frozen;
+
+        if (!IsGameFinished)
+            Time.timeScale = (frozen || IsPaused) ? FrozenTimeScale : RunningTimeScale;
     }
 
     /// <summary>Restablece el estado global. Debe llamarse al cargar una escena de juego.</summary>
@@ -53,6 +68,7 @@ public static class GamePause
 
         IsPaused = false;
         IsGameFinished = false;
+        IsGameplayFrozen = false;
         Time.timeScale = RunningTimeScale;
 
         if (wasPaused) PauseChanged?.Invoke(false);

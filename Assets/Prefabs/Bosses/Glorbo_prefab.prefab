@@ -229,6 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 1
+  bossDisplayName: GLORBO
   maskReward: {fileID: 11400000, guid: 2803ac7d0b543f94f92d2bd88b665ac4, type: 2}
   OnBossDeath:
     m_PersistentCalls:

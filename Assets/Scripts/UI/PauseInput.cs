@@ -51,7 +51,7 @@ public class PauseInput : MonoBehaviour
 
     private void OnPausePerformed(InputAction.CallbackContext context)
     {
-        if (pauseManager == null || GamePause.IsGameFinished) return;
+        if (pauseManager == null || GamePause.IsGameFinished || GamePause.IsGameplayFrozen) return;
 
         // Con un menu abierto, Start y Escape cierran el panel que tiene el foco igual que el
         // boton de atras, para que ambos botones se comporten igual con submenus anidados.

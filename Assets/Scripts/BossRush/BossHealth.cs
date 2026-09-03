@@ -10,6 +10,10 @@ public class BossHealth : MonoBehaviour
 {
     [SerializeField] private int maxHP = 1;
 
+    [Header("Identidad")]
+    [Tooltip("Nombre del boss que se mostrara en el HUD encima de su barra de vida")]
+    [SerializeField] private string bossDisplayName = "";
+
     [Header("Recompensa")]
     [Tooltip("Mascara que el jugador obtiene al derrotar a este boss")]
     [SerializeField] private MaskDefinition maskReward;
@@ -36,6 +40,7 @@ public class BossHealth : MonoBehaviour
     public int CurrentHP => hp;
     public int MaxHP => maxHP;
     public MaskDefinition MaskReward => maskReward;
+    public string BossDisplayName => bossDisplayName;
 
     /// <summary>Vida restante entre 0 y 1. Es la referencia de los cambios de fase.</summary>
     public float HealthRatio => maxHP <= 0 ? 0f : Mathf.Clamp01((float)hp / maxHP);
