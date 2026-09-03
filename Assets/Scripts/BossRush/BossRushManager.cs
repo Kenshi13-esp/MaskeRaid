@@ -17,6 +17,7 @@ public class BossRushManager : MonoBehaviour
     private static readonly string[] GameplayUiElements =
     {
         "HPBoss_BG",
+        "BossName",
         "PlayerHealthBar",
         "RunTimerPanel",
         "PauseButton",
@@ -47,6 +48,9 @@ public class BossRushManager : MonoBehaviour
 
     [Tooltip("Etiqueta de tiempo dentro del panel de victoria")]
     [SerializeField] private TextMeshProUGUI victoryTimerLabel;
+
+    [Tooltip("Etiqueta de tiempo dentro del panel de derrota")]
+    [SerializeField] private TextMeshProUGUI gameOverTimerLabel;
 
     [Header("Redireccion")]
     [Tooltip("Segundos antes de volver al menu principal tras mostrar el panel de fin")]
@@ -158,7 +162,7 @@ public class BossRushManager : MonoBehaviour
 
             yield return new WaitForSeconds(introDelay);
 
-            SpawnBoss(bossPrefab);
+            yield return StartCoroutine(SpawnBoss(bossPrefab));
 
             while (currentBossHealth != null && !currentBossHealth.IsDead && !isGameOver)
             {
@@ -185,7 +189,11 @@ public class BossRushManager : MonoBehaviour
         }
     }
 
-    private void SpawnBoss(GameObject bossPrefab)
+    [Header("Spawn Intro")]
+    [Tooltip("Magnitud del screen shake durante la intro de spawn de Oniki")]
+    [SerializeField] private float onikiShakeMagnitude = 0.3f;
+
+    private IEnumerator SpawnBoss(GameObject bossPrefab)
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
@@ -198,7 +206,7 @@ public class BossRushManager : MonoBehaviour
         if (currentBossHealth == null)
         {
             Debug.LogError($"[BossRushManager] El prefab '{bossPrefab.name}' no tiene BossHealth.", this);
-            return;
+            yield break;
         }
 
         currentBossHealth.ResetHealth();
@@ -206,14 +214,34 @@ public class BossRushManager : MonoBehaviour
         currentBossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
         currentBossHealth.OnBossDeath.AddListener(OnBossDefeated);
 
+        float soundDuration = GetSpawnSoundDuration(bossPrefab.name);
+        if (soundDuration > 0f)
+        {
+            GamePause.SetGameplayFrozen(true);
+
+            if (bossPrefab.name.Contains("Oni"))
+                CameraShake.Shake(soundDuration, onikiShakeMagnitude);
+
+            yield return new WaitForSecondsRealtime(soundDuration);
+
+            GamePause.SetGameplayFrozen(false);
+        }
+
         ActivateBoss(currentBossInstance);
     }
 
     private void PlaySpawnSound(string prefabName)
     {
         if (prefabName.Contains("Glorbo")) SoundManager.PlaySound(SoundType.GLORBO_SPAWN);
-        else if (prefabName.Contains("Oni")) SoundManager.PlaySound(SoundType.ONI_SPAWN);
+        else if (prefabName.Contains("Oni")) SoundManager.PlaySound(SoundType.ONIKI_SPAWN);
         else if (prefabName.Contains(FinalBossNameToken)) SoundManager.PlaySound(SoundType.QETZA_SPAWN);
+    }
+
+    /// <summary>Devuelve la duracion del sonido de spawn del boss segun su nombre, o 0 si no tiene.</summary>
+    private float GetSpawnSoundDuration(string prefabName)
+    {
+        if (prefabName.Contains("Oni")) return SoundManager.GetClipLength(SoundType.ONIKI_SPAWN);
+        return 0f;
     }
 
     private void OnBossDefeated(MaskDefinition mask)
@@ -257,16 +285,18 @@ public class BossRushManager : MonoBehaviour
         StartCoroutine(FadeToBlackThenShowPanel(victoryPanel, victoryTimerLabel, elapsedText, position));
     }
 
-    /// <summary>Detiene el cronometro, borra el nombre, desvanece a negro, muestra el panel y redirige.</summary>
+    /// <summary>Detiene el cronometro, captura el nombre y el tiempo, desvanece a negro, muestra el panel y redirige.</summary>
     private void OnPlayerDeath()
     {
         if (isGameOver) return;
 
         isGameOver = true;
 
-        Debug.Log($"[BossRushManager] GAME OVER. Rondas: {currentRoundIndex - 1}. Bosses derrotados: {totalBossesDefeated}.");
+        string playerName = PlayerSession.PlayerName;
 
         if (RunTimer.Active != null) RunTimer.Active.Stop();
+
+        Debug.Log($"[BossRushManager] GAME OVER. Jugador: {playerName}. Rondas: {currentRoundIndex - 1}. Bosses derrotados: {totalBossesDefeated}.");
 
         PlayerSession.Clear();
 
@@ -276,7 +306,8 @@ public class BossRushManager : MonoBehaviour
         HideGameplayUi();
         GamePause.SetGameFinished(true);
 
-        StartCoroutine(FadeToBlackThenShowPanel(gameOverPanel, null, string.Empty, -1));
+        string gameOverText = $"R.I.P\n{playerName}";
+        StartCoroutine(FadeToBlackThenShowPanel(gameOverPanel, gameOverTimerLabel, gameOverText, -1));
     }
 
     /// <summary>

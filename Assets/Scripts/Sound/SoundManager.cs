@@ -22,6 +22,7 @@ public enum SoundType
 	MUSIC,
 	PLAY,
 	VICTORY,
+	ONIKI_SPAWN,
 }
 
 [System.Serializable]
@@ -90,6 +91,17 @@ public class SoundManager : MonoBehaviour
 	{
 		if (instance == null) return;
 		instance.PlaySoundInternal(soundType, volume);
+	}
+
+	/// <summary>Devuelve la duracion en segundos del clip asignado a un SoundType, o 0 si no existe.</summary>
+	public static float GetClipLength(SoundType soundType)
+	{
+		if (instance == null) return 0f;
+
+		if (!instance.soundsByType.TryGetValue(soundType, out Sound sound) || sound.clip == null)
+			return 0f;
+
+		return sound.clip.length;
 	}
 
 	private void PlaySoundInternal(SoundType soundType, float volume)

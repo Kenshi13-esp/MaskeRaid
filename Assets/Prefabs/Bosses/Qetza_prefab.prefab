@@ -257,6 +257,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHP: 1
+  bossDisplayName: QETZA
   maskReward: {fileID: 0}
   OnBossDeath:
     m_PersistentCalls:

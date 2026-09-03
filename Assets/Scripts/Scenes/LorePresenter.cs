@@ -6,8 +6,8 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Presenta la historia inicial del juego en una pantalla negra con texto blanco.
-/// Cada parrafo aparece con efecto maquina de escribir; pulsar cualquier tecla acelera
-/// la escritura y, una vez completo, avanza al siguiente parrafo. Al terminar, carga
+/// Todo el texto aparece en una sola pagina con efecto maquina de escribir; pulsar
+/// cualquier tecla acelera la escritura y, una vez completo, una pulsacion mas carga
 /// la escena de juego.
 /// </summary>
 public class LorePresenter : MonoBehaviour
@@ -21,7 +21,7 @@ public class LorePresenter : MonoBehaviour
 
     [Header("Configuracion")]
     [Tooltip("Caracteres por segundo del efecto maquina de escribir")]
-    [SerializeField] private float charactersPerSecond = 30f;
+    [SerializeField] private float charactersPerSecond = 45f;
 
     [Tooltip("Escena que se carga al terminar la presentacion")]
     [SerializeField] private string nextSceneName = "GameScene";
@@ -36,24 +36,19 @@ public class LorePresenter : MonoBehaviour
         "May the gods and the fallen walk with me. The hunt has begun..."
     };
 
-    private int currentParagraphIndex;
     private bool isTyping;
     private bool waitingForInput;
     private bool skipRequested;
 
     private void Start()
     {
-        paragraphs[0] = paragraphs[0].Replace(PlayerNamePlaceholder, $"<color=#4D9FFF>{PlayerSession.PlayerName}</color>");
-
-        currentParagraphIndex = 0;
-
         if (continueHint != null)
         {
             continueHint.text = ContinueHintText;
             continueHint.gameObject.SetActive(false);
         }
 
-        StartCoroutine(ShowParagraph());
+        StartCoroutine(ShowFullLore());
     }
 
     private void Update()
@@ -67,33 +62,18 @@ public class LorePresenter : MonoBehaviour
         else if (waitingForInput)
         {
             waitingForInput = false;
-            Advance();
-        }
-    }
-
-    /// <summary>Avanza al siguiente parrafo o carga la escena de juego si era el ultimo.</summary>
-    private void Advance()
-    {
-        if (continueHint != null) continueHint.gameObject.SetActive(false);
-
-        currentParagraphIndex++;
-
-        if (currentParagraphIndex >= paragraphs.Length)
-        {
             LoadNextScene();
         }
-        else
-        {
-            StartCoroutine(ShowParagraph());
-        }
     }
 
-    private IEnumerator ShowParagraph()
+    /// <summary>Construye el texto completo uniendo todos los parrafos y lo muestra con efecto maquina de escribir.</summary>
+    private IEnumerator ShowFullLore()
     {
         isTyping = true;
         skipRequested = false;
 
-        loreText.text = paragraphs[currentParagraphIndex];
+        string fullText = BuildFullText();
+        loreText.text = fullText;
         loreText.ForceMeshUpdate();
 
         int totalCharacters = loreText.textInfo.characterCount;
@@ -123,6 +103,15 @@ public class LorePresenter : MonoBehaviour
         waitingForInput = true;
 
         if (continueHint != null) continueHint.gameObject.SetActive(true);
+    }
+
+    /// <summary>Une todos los parrafos en un unico texto con separacion entre ellos.</summary>
+    private string BuildFullText()
+    {
+        paragraphs[0] = paragraphs[0].Replace(PlayerNamePlaceholder, PlayerSession.PlayerName);
+
+        const string paragraphSeparator = "\n\n";
+        return string.Join(paragraphSeparator, paragraphs);
     }
 
     /// <summary>Comprueba si se ha pulsado cualquier tecla, boton del raton o boton del mando.</summary>
