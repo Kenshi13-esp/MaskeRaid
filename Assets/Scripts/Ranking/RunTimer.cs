@@ -71,8 +71,8 @@ public class RunTimer : MonoBehaviour
     {
         if (!IsRunning) return;
 
-        // La pausa no debe contar: el reloj del menu de pausa no es tiempo de juego.
-        if (GamePause.IsPaused) return;
+        // La pausa y las intros cinematicas congeladas no deben contar: ese tiempo no es de juego.
+        if (GamePause.IsPaused || GamePause.IsGameplayFrozen) return;
 
         ElapsedSeconds += Time.unscaledDeltaTime;
 

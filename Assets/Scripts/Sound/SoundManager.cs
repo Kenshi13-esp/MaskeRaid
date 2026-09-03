@@ -23,6 +23,10 @@ public enum SoundType
 	PLAY,
 	VICTORY,
 	ONIKI_SPAWN,
+	GLORBO_SPAWN_INTRO,
+	QETZA_SPAWN_INTRO,
+	VICTORY_SOUND,
+	DEFEAT_SOUND,
 }
 
 [System.Serializable]
@@ -51,15 +55,17 @@ public class SoundManager : MonoBehaviour
 		{
 			instance = this;
 			DontDestroyOnLoad(gameObject);
+			
+			BuildSoundLookup();
+			InitializeAudioSourcePool();
 		}
 		else
 		{
+			// La instancia persistente ya existe: copiar los sonidos de esta escena
+			// para que tenga siempre la version mas reciente del array serializado.
+			instance.RebuildSounds(sounds);
 			Destroy(gameObject);
-			return;
 		}
-		
-		BuildSoundLookup();
-		InitializeAudioSourcePool();
 	}
 
 	/// <summary>
@@ -76,6 +82,15 @@ public class SoundManager : MonoBehaviour
 
 			soundsByType[sound.soundType] = sound;
 		}
+	}
+
+	/// <summary>Actualiza el array de sonidos y reconstruye el diccionario de la instancia persistente.</summary>
+	private void RebuildSounds(Sound[] newSounds)
+	{
+		if (newSounds == null) return;
+
+		sounds = newSounds;
+		BuildSoundLookup();
 	}
 
 	private void InitializeAudioSourcePool()

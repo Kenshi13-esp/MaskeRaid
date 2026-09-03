@@ -190,16 +190,30 @@ public class BossRushManager : MonoBehaviour
     }
 
     [Header("Spawn Intro")]
+    [Tooltip("Duracion fija de la intro de spawn de cada boss, en segundos")]
+    [SerializeField] private float spawnIntroDuration = 3f;
+
     [Tooltip("Magnitud del screen shake durante la intro de spawn de Oniki")]
     [SerializeField] private float onikiShakeMagnitude = 0.3f;
+
+    [Tooltip("Magnitud del screen shake durante la intro de spawn de Glorbo")]
+    [SerializeField] private float glorboShakeMagnitude = 0.3f;
+
+    [Tooltip("Magnitud del screen shake durante la intro de spawn de Qetza")]
+    [SerializeField] private float qetzaShakeMagnitude = 0.3f;
+
+    [Header("Sonidos de Spawn")]
+    [SerializeField] private AudioClip onikiSpawnClip;
+    [SerializeField] private AudioClip glorboSpawnClip;
+    [SerializeField] private AudioClip qetzaSpawnClip;
+
+    private AudioSource spawnAudioSource;
 
     private IEnumerator SpawnBoss(GameObject bossPrefab)
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
 
         currentBossInstance = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
-
-        PlaySpawnSound(bossPrefab.name);
 
         currentBossHealth = currentBossInstance.GetComponent<BossHealth>();
 
@@ -214,15 +228,24 @@ public class BossRushManager : MonoBehaviour
         currentBossHealth.OnBossDeath.RemoveListener(OnBossDefeated);
         currentBossHealth.OnBossDeath.AddListener(OnBossDefeated);
 
-        float soundDuration = GetSpawnSoundDuration(bossPrefab.name);
-        if (soundDuration > 0f)
+        float shakeMagnitude = GetSpawnShakeMagnitude(bossPrefab.name);
+        if (shakeMagnitude > 0f)
         {
+            Rigidbody2D bossBody = currentBossInstance.GetComponent<Rigidbody2D>();
+            RigidbodyType2D originalBodyType = bossBody != null ? bossBody.bodyType : RigidbodyType2D.Dynamic;
+            if (bossBody != null) bossBody.bodyType = RigidbodyType2D.Kinematic;
+
             GamePause.SetGameplayFrozen(true);
 
-            if (bossPrefab.name.Contains("Oni"))
-                CameraShake.Shake(soundDuration, onikiShakeMagnitude);
+            PlaySpawnSound(bossPrefab.name);
 
-            yield return new WaitForSecondsRealtime(soundDuration);
+            CameraShake.Shake(spawnIntroDuration, shakeMagnitude);
+
+            yield return new WaitForSecondsRealtime(spawnIntroDuration);
+
+            StopSpawnSound();
+
+            if (bossBody != null) bossBody.bodyType = originalBodyType;
 
             GamePause.SetGameplayFrozen(false);
         }
@@ -232,15 +255,42 @@ public class BossRushManager : MonoBehaviour
 
     private void PlaySpawnSound(string prefabName)
     {
-        if (prefabName.Contains("Glorbo")) SoundManager.PlaySound(SoundType.GLORBO_SPAWN);
-        else if (prefabName.Contains("Oni")) SoundManager.PlaySound(SoundType.ONIKI_SPAWN);
-        else if (prefabName.Contains(FinalBossNameToken)) SoundManager.PlaySound(SoundType.QETZA_SPAWN);
+        if (spawnAudioSource == null)
+        {
+            spawnAudioSource = gameObject.AddComponent<AudioSource>();
+            spawnAudioSource.playOnAwake = false;
+            spawnAudioSource.loop = false;
+        }
+
+        AudioClip clip = GetSpawnClip(prefabName);
+        if (clip == null) return;
+
+        spawnAudioSource.clip = clip;
+        spawnAudioSource.volume = 1f;
+        spawnAudioSource.Play();
     }
 
-    /// <summary>Devuelve la duracion del sonido de spawn del boss segun su nombre, o 0 si no tiene.</summary>
-    private float GetSpawnSoundDuration(string prefabName)
+    private void StopSpawnSound()
     {
-        if (prefabName.Contains("Oni")) return SoundManager.GetClipLength(SoundType.ONIKI_SPAWN);
+        if (spawnAudioSource != null && spawnAudioSource.isPlaying)
+            spawnAudioSource.Stop();
+    }
+
+    /// <summary>Devuelve el clip de spawn del boss segun su nombre.</summary>
+    private AudioClip GetSpawnClip(string prefabName)
+    {
+        if (prefabName.Contains("Glorbo")) return glorboSpawnClip;
+        if (prefabName.Contains("Oni")) return onikiSpawnClip;
+        if (prefabName.Contains(FinalBossNameToken)) return qetzaSpawnClip;
+        return null;
+    }
+
+    /// <summary>Devuelve la magnitud de screen shake para la intro del boss segun su nombre.</summary>
+    private float GetSpawnShakeMagnitude(string prefabName)
+    {
+        if (prefabName.Contains("Glorbo")) return glorboShakeMagnitude;
+        if (prefabName.Contains("Oni")) return onikiShakeMagnitude;
+        if (prefabName.Contains(FinalBossNameToken)) return qetzaShakeMagnitude;
         return 0f;
     }
 
@@ -282,6 +332,8 @@ public class BossRushManager : MonoBehaviour
         HideGameplayUi();
         GamePause.SetGameFinished(true);
 
+        SoundManager.PlaySound(SoundType.VICTORY_SOUND);
+
         StartCoroutine(FadeToBlackThenShowPanel(victoryPanel, victoryTimerLabel, elapsedText, position));
     }
 
@@ -305,6 +357,8 @@ public class BossRushManager : MonoBehaviour
         DisableCurrentBoss();
         HideGameplayUi();
         GamePause.SetGameFinished(true);
+
+        SoundManager.PlaySound(SoundType.DEFEAT_SOUND);
 
         string gameOverText = $"R.I.P\n{playerName}";
         StartCoroutine(FadeToBlackThenShowPanel(gameOverPanel, gameOverTimerLabel, gameOverText, -1));
