@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 3000
+  maxHP: 4000
   bossDisplayName: ONIKI
   maskReward: {fileID: 11400000, guid: ba8054a7250415540837272b1a500981, type: 2}
   OnBossDeath:

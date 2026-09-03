@@ -4330,7 +4330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a42a54ff6b760234986bd3233ccc3228, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 500
+  maxHP: 1000
   knockbackDuration: 0.5
   sideForce: 18
   jumpHeight: 1.8

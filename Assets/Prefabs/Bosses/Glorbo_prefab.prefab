@@ -214,7 +214,7 @@ MonoBehaviour:
   phase2_healthPercent: 0.5
   phase2DashProfile: {fileID: 11400000, guid: 08d54bcef4aa855498347a03213f10ac, type: 2}
   stunTime: 0.8
-  contactDamage: 100
+  contactDamage: 50
   hitCooldown: 0.35
 --- !u!114 &-4732588315445504479
 MonoBehaviour:
@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 3000
+  maxHP: 2000
   bossDisplayName: GLORBO
   maskReward: {fileID: 11400000, guid: 2803ac7d0b543f94f92d2bd88b665ac4, type: 2}
   OnBossDeath:

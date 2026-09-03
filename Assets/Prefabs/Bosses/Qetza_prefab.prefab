@@ -288,7 +288,7 @@ MonoBehaviour:
   repositionThreshold: 0.1
   dashDamage: 100
   dashDamageCooldown: 0.3
-  areaDamage: 100
+  areaDamage: 200
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
