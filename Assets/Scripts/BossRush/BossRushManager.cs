@@ -248,7 +248,7 @@ public class BossRushManager : MonoBehaviour
         {
             elapsedText = RunTimer.Active.ElapsedText;
             position = RunTimer.Active.StopAndRecord();
-            Debug.Log($"[BossRushManager] Victoria: {PlayerSession.PlayerName} - {elapsedText}. Puesto {position}.");
+            Debug.Log($"[BossRushManager] Victoria: {PlayerSession.PlayerName} - {elapsedText}. RANK {position}.");
         }
 
         HideGameplayUi();
