@@ -1388,7 +1388,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boardLabel: {fileID: 1521848865}
   maxRows: 10
-  emptyMessage: SIN RECORDS TODAVIA
+  emptyMessage: NO RECORDS YET
   monospaceWidth: 0.6
 --- !u!1 &651586377
 GameObject:
@@ -2846,7 +2846,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: SIN RECORDS TODAVIA
+  m_text: 'NO RECORDS YET
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 954c1239b2ac8d74590464975366be84, type: 2}
   m_sharedMaterial: {fileID: -2134429607616201203, guid: 954c1239b2ac8d74590464975366be84, type: 2}
