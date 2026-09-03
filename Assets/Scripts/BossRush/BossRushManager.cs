@@ -50,7 +50,17 @@ public class BossRushManager : MonoBehaviour
 
     [Header("Redireccion")]
     [Tooltip("Segundos antes de volver al menu principal tras mostrar el panel de fin")]
-    [SerializeField] private float delayBeforeRedirect = 3f;
+    [SerializeField] private float delayBeforeRedirect = 4f;
+
+    [Header("Desvanecimiento")]
+    [Tooltip("CanvasGroup del panel negro a pantalla completa usado para el fade")]
+    [SerializeField] private CanvasGroup fadeCanvasGroup;
+
+    [Tooltip("Opacidad maxima del desvanecimiento (0 = transparente, 1 = negro absoluto)")]
+    [SerializeField] private float fadeMaxAlpha = 0.85f;
+
+    [Tooltip("Duracion del desvanecimiento en segundos")]
+    [SerializeField] private float fadeDuration = 1f;
 
     private PlayerMaskController playerMaskController;
     private PlayerHealth playerHealth;
@@ -70,6 +80,7 @@ public class BossRushManager : MonoBehaviour
 
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);
+        if (fadeCanvasGroup != null) fadeCanvasGroup.alpha = 0f;
     }
 
     private void Start()
@@ -225,7 +236,7 @@ public class BossRushManager : MonoBehaviour
         bossController.ActivateBoss();
     }
 
-    /// <summary>Detiene el cronometro, muestra el panel de victoria y redirige al menu.</summary>
+    /// <summary>Detiene el cronometro, desvanece a negro, muestra el panel de victoria y redirige.</summary>
     private void TriggerVictory()
     {
         if (currentBossInstance != null) Destroy(currentBossInstance);
@@ -241,29 +252,12 @@ public class BossRushManager : MonoBehaviour
         }
 
         HideGameplayUi();
-
-        if (victoryPanel != null)
-        {
-            victoryPanel.SetActive(true);
-
-            if (victoryTimerLabel != null)
-            {
-                victoryTimerLabel.text = position > 0
-                    ? $"{elapsedText}\nPUESTO {position}"
-                    : elapsedText;
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[BossRushManager] Panel de victoria no asignado.", this);
-        }
-
         GamePause.SetGameFinished(true);
 
-        StartCoroutine(ReturnToMainMenuAfterDelay());
+        StartCoroutine(FadeToBlackThenShowPanel(victoryPanel, victoryTimerLabel, elapsedText, position));
     }
 
-    /// <summary>Detiene el cronometro, borra el nombre, muestra el panel de derrota y redirige.</summary>
+    /// <summary>Detiene el cronometro, borra el nombre, desvanece a negro, muestra el panel y redirige.</summary>
     private void OnPlayerDeath()
     {
         if (isGameOver) return;
@@ -280,19 +274,57 @@ public class BossRushManager : MonoBehaviour
 
         DisableCurrentBoss();
         HideGameplayUi();
+        GamePause.SetGameFinished(true);
 
-        if (gameOverPanel != null)
+        StartCoroutine(FadeToBlackThenShowPanel(gameOverPanel, null, string.Empty, -1));
+    }
+
+    /// <summary>
+    /// Desvanece la pantalla a negro, activa el panel de fin encima del fade y, tras un tiempo,
+    /// redirige al menu principal. Usa tiempo real porque Time.timeScale esta a cero.
+    /// </summary>
+    private IEnumerator FadeToBlackThenShowPanel(GameObject panel, TextMeshProUGUI timerLabel, string elapsedText, int position)
+    {
+        if (fadeCanvasGroup != null)
         {
-            gameOverPanel.SetActive(true);
+            fadeCanvasGroup.blocksRaycasts = true;
+            float elapsed = 0f;
+
+            while (elapsed < fadeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                fadeCanvasGroup.alpha = Mathf.Clamp01(elapsed / fadeDuration) * fadeMaxAlpha;
+                yield return null;
+            }
+
+            fadeCanvasGroup.alpha = fadeMaxAlpha;
+        }
+
+        if (panel != null)
+        {
+            panel.transform.SetAsLastSibling();
+            panel.SetActive(true);
+
+            if (timerLabel != null)
+            {
+                timerLabel.text = position > 0
+                    ? $"{elapsedText}\nPUESTO {position}"
+                    : elapsedText;
+            }
         }
         else
         {
-            Debug.LogWarning("[BossRushManager] Panel de Game Over no asignado.", this);
+            Debug.LogWarning("[BossRushManager] Panel de fin no asignado.", this);
         }
 
-        GamePause.SetGameFinished(true);
+        float remainingDelay = delayBeforeRedirect;
 
-        StartCoroutine(ReturnToMainMenuAfterDelay());
+        if (fadeCanvasGroup != null) remainingDelay = Mathf.Max(0f, delayBeforeRedirect - fadeDuration);
+
+        yield return new WaitForSecondsRealtime(remainingDelay);
+
+        GamePause.ResetState();
+        SceneManager.LoadScene(MainMenuSceneName);
     }
 
     private void DisableCurrentBoss()
@@ -337,11 +369,4 @@ public class BossRushManager : MonoBehaviour
         hiddenUiElements.Clear();
     }
 
-    private IEnumerator ReturnToMainMenuAfterDelay()
-    {
-        yield return new WaitForSecondsRealtime(delayBeforeRedirect);
-
-        GamePause.ResetState();
-        SceneManager.LoadScene(MainMenuSceneName);
-    }
 }

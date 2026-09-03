@@ -2046,7 +2046,7 @@ MonoBehaviour:
   nameField: {fileID: 2113205748}
   confirmButton: {fileID: 211682874}
   closeButton: {fileID: 1248775825}
-  sceneToLoad: GameScene
+  sceneToLoad: LoreScene
 --- !u!1 &1197106517
 GameObject:
   m_ObjectHideFlags: 0
@@ -3117,7 +3117,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   firstSelected: {fileID: 1805552295}
   restorePreviousSelection: 1
-  deactivateOnBack: 0
+  deactivateOnBack: 1
   blockNavigationOutside: 1
 --- !u!114 &1805552299
 MonoBehaviour:
