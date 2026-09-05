@@ -20,6 +20,7 @@ public class MenuManager : MonoBehaviour
 
     public void Quit()
     {
+        RankingStore.Clear();
         Application.Quit();
     }
 }

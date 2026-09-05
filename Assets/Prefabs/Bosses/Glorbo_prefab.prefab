@@ -191,8 +191,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.002825896, y: 0.515764}
-  m_Radius: 0.4328812
+  m_Offset: {x: 0.0115196705, y: 0.4940296}
+  m_Radius: 0.3611575
 --- !u!114 &137759390586771223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,7 +214,7 @@ MonoBehaviour:
   phase2_healthPercent: 0.5
   phase2DashProfile: {fileID: 11400000, guid: 08d54bcef4aa855498347a03213f10ac, type: 2}
   stunTime: 0.8
-  contactDamage: 50
+  contactDamage: 100
   hitCooldown: 0.35
 --- !u!114 &-4732588315445504479
 MonoBehaviour:
@@ -228,7 +228,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 2000
+  maxHP: 4000
   bossDisplayName: GLORBO
   maskReward: {fileID: 11400000, guid: 2803ac7d0b543f94f92d2bd88b665ac4, type: 2}
   OnBossDeath:

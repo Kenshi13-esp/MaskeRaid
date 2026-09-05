@@ -33,6 +33,10 @@ public class BossQetzaController : MonoBehaviour, IBossController
     [SerializeField] private float offScreenHeight = 30f;
     [SerializeField] private float shadowMoveDelay = 0.15f;
     [SerializeField] private float prejumpDelay = 0.8f;
+    [Tooltip("Velocidad a la que la sombra persigue al jugador. Debe ser MAYOR a la velocidad del jugador para que lo alcance.")]
+    [SerializeField] private float jumpTrackingSpeed = 15f;
+    [Tooltip("Distancia mínima entre la sombra y el jugador para que el jefe decida caer.")]
+    [SerializeField] private float dropDistanceThreshold = 0.5f;
 
     [Header("Dash Settings")]
     [SerializeField] private int dashesPhaseOne = 1;
@@ -306,7 +310,6 @@ public class BossQetzaController : MonoBehaviour, IBossController
         Vector2 currentPos = rb.position;
         Vector2 offScreenPosStart = new Vector2(currentPos.x, currentPos.y + offScreenHeight);
         Vector2 targetLandingPos = ClampToArena(player.position);
-        Vector2 offScreenPosEnd = new Vector2(targetLandingPos.x, targetLandingPos.y + offScreenHeight);
 
         CreateShadow(currentPos, targetLandingPos);
 
@@ -324,6 +327,7 @@ public class BossQetzaController : MonoBehaviour, IBossController
         float halfDuration = (jumpDuration / speedMultiplier) / 2f;
         float delayDuration = shadowMoveDelay / speedMultiplier;
 
+        // SUBIDA
         float elapsed = 0f;
         while (elapsed < halfDuration)
         {
@@ -338,15 +342,18 @@ public class BossQetzaController : MonoBehaviour, IBossController
 
         yield return new WaitForSeconds(delayDuration);
 
-        elapsed = 0f;
-        Vector2 finalClampedShadowPos = shadowEndPos;
-        while (elapsed < halfDuration)
+        // --- TRACKING INDEFINIDO HASTA ALCANZAR AL JUGADOR ---
+        Vector2 finalClampedShadowPos = shadowStartPos;
+        shadowEndPos = shadowStartPos; // Empezamos a buscar desde donde saltó
+        
+        while (player != null && !bossHealth.IsDead)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / halfDuration;
+            Vector2 currentTarget = ClampToArena(player.position) + shadowMarkerLocalOffset;
             
-            Vector2 desiredShadowPos = Vector2.Lerp(shadowStartPos, shadowEndPos, t);
-            Vector2 clampedShadowPos = ClampShadowPosition(desiredShadowPos);
+            // Mover hacia el jugador a velocidad constante usando MoveTowards
+            shadowEndPos = Vector2.MoveTowards(shadowEndPos, currentTarget, Time.deltaTime * jumpTrackingSpeed);
+            
+            Vector2 clampedShadowPos = ClampShadowPosition(shadowEndPos);
             finalClampedShadowPos = clampedShadowPos;
             
             float offsetY = offScreenHeight;
@@ -358,9 +365,16 @@ public class BossQetzaController : MonoBehaviour, IBossController
                 shadowInstance.transform.position = clampedShadowPos;
             }
 
+            // Comprobar si ya está encima (dentro del umbral permitido)
+            if (Vector2.Distance(shadowEndPos, currentTarget) <= dropDistanceThreshold)
+            {
+                break; // Rompemos el bucle infinito para iniciar la caída
+            }
+
             yield return null;
         }
 
+        // Preparar para caer
         Vector2 finalOffScreenPos = new Vector2(finalClampedShadowPos.x, finalClampedShadowPos.y + offScreenHeight);
         rb.MovePosition(finalOffScreenPos);
 
@@ -371,6 +385,7 @@ public class BossQetzaController : MonoBehaviour, IBossController
         
         SoundManager.PlaySound(SoundType.QETZA_ATTACK_2);
 
+        // CAÍDA
         elapsed = 0f;
         while (elapsed < halfDuration)
         {

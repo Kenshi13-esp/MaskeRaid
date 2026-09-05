@@ -256,7 +256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 3000
+  maxHP: 5000
   bossDisplayName: QETZA
   maskReward: {fileID: 0}
   OnBossDeath:
@@ -284,7 +284,7 @@ MonoBehaviour:
   prejumpDelay: 0.5
   dashesPhaseOne: 1
   dashesPhaseTwo: 3
-  repositionSpeed: 8
+  repositionSpeed: 5
   repositionThreshold: 0.1
   dashDamage: 100
   dashDamageCooldown: 0.3
@@ -299,7 +299,7 @@ MonoBehaviour:
   offsetAnimationTransform: {fileID: 0}
   arenaPaddingFromWalls: 2
   phaseTwoColor: {r: 1, g: 0, b: 0, a: 1}
-  phaseTwoSpeedMultiplier: 1.6
+  phaseTwoSpeedMultiplier: 1.5
   phaseTwoHealthPercent: 0.5
   phaseTwoDashProfile: {fileID: 11400000, guid: bf690e865b1fc9842868338f235f6a7d, type: 2}
   shadowPrefab: {fileID: 1215342892149415719, guid: 7515e5964def13d4e9b0d6e35225aadf, type: 3}

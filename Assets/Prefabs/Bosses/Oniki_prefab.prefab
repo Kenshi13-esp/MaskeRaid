@@ -191,7 +191,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.09592724, y: 0.38025352}
+  m_Offset: {x: 0.1502473, y: 0.3088755}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.616279, y: 0}
@@ -201,7 +201,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.90108085, y: 0.6114735}
+  m_Size: {x: 0.71567553, y: 0.4842844}
   m_EdgeRadius: 0
 --- !u!114 &5319632026133929511
 MonoBehaviour:
@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9a897a5c8083ba4e8a14b26bb2e2c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHP: 4000
+  maxHP: 3000
   bossDisplayName: ONIKI
   maskReward: {fileID: 11400000, guid: ba8054a7250415540837272b1a500981, type: 2}
   OnBossDeath:
@@ -241,7 +241,7 @@ MonoBehaviour:
   phase1_chargeTime: 0.7
   phase1_recoveryTime: 0.2
   phase1_timeBetweenAttacks: 0.7
-  phase2_chargeTime: 1
+  phase2_chargeTime: 0.7
   phase2_delayBetweenDashes: 0.5
   phase2_recoveryTime: 1
   phase2_timeBetweenAttacks: 1
@@ -282,7 +282,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.09501392, y: 0.38348126}
+  m_Offset: {x: 0.15040316, y: 0.30826408}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.616279, y: 0}
@@ -292,7 +292,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.8992542, y: 0.60000813}
+  m_Size: {x: 0.71761537, y: 0.48724616}
   m_EdgeRadius: 0
 --- !u!114 &4839426506427099614
 MonoBehaviour:

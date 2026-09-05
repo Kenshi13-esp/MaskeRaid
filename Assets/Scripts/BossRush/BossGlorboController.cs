@@ -10,6 +10,7 @@ using UnityEngine;
 public class BossGlorboController : MonoBehaviour, IBossController
 {
     private const string IdleTrigger = "Idle";
+    private const string AnticipationTrigger = "Anticipation";
 
     [Header("Target")]
     [SerializeField] private Transform player;
@@ -82,12 +83,21 @@ public class BossGlorboController : MonoBehaviour, IBossController
         CheckPhaseTransition();
     }
 
+    private IEnumerator ChargeAttack(float chargeTime)
+    {
+        if (player != null) dashActor.FaceDirection(player.position - transform.position);
+
+        dashActor.SetAnimatorTrigger(AnticipationTrigger);
+
+        yield return new WaitForSeconds(chargeTime);
+    }
+
     private IEnumerator BossLoop()
     {
         while (isActive && !bossHealth.IsDead)
         {
             FacePlayer();
-            yield return new WaitForSeconds(ChargeUpTime);
+            yield return ChargeAttack(ChargeUpTime);
 
             yield return dashMove.Execute(BuildDashRequest());
 

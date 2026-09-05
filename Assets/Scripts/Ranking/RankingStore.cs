@@ -4,19 +4,12 @@ using System.IO;
 using UnityEngine;
 
 /// <summary>
-/// Base de datos local del ranking. Guarda las marcas en un JSON dentro de
-/// <see cref="Application.persistentDataPath"/>, que es la carpeta de datos de usuario del
-/// juego: sobrevive a cerrar el juego y no se toca al reinstalar los assets.
-///
-/// Se usa un fichero y no PlayerPrefs porque una lista de marcas es una coleccion, y meterla en
-/// PlayerPrefs obligaria a serializarla a mano en una clave suelta.
-///
-/// La carga es diferida y se queda en cache: leer disco en cada consulta seria absurdo para un
-/// dato que solo cambia al terminar una partida.
+/// Base de datos local del ranking. Guarda todas las marcas en un JSON dentro de
+/// <see cref="Application.persistentDataPath"/>.
 /// </summary>
 public static class RankingStore
 {
-    /// <summary>Numero maximo de marcas que se conservan. El resto se descarta al ordenar.</summary>
+    /// <summary>Numero maximo de marcas que se muestran en la pantalla de ranking.</summary>
     public const int MaxEntries = 10;
 
     /// <summary>
@@ -35,19 +28,22 @@ public static class RankingStore
     /// <summary>Ruta del fichero de ranking en la carpeta de datos del usuario.</summary>
     public static string FilePath => Path.Combine(Application.persistentDataPath, FileName);
 
-    /// <summary>Marcas guardadas, ya ordenadas.</summary>
+    /// <summary>Marcas guardadas, ya ordenadas (Solo devuelve el Top 10 para la UI).</summary>
     public static IReadOnlyList<RankingEntry> Entries
     {
         get
         {
             EnsureLoaded();
-            return entries;
+            // Novedad: Calculamos cuántos elementos devolver (máximo 10)
+            int count = Mathf.Min(entries.Count, MaxEntries);
+            // Devolvemos solo ese fragmento de la lista
+            return entries.GetRange(0, count);
         }
     }
 
     /// <summary>
     /// Registra una partida completada y devuelve su puesto empezando en 1, o -1 si no ha
-    /// entrado en la tabla.
+    /// entrado en el Top 10.
     /// </summary>
     public static int AddRun(string playerName, float timeSeconds)
     {
@@ -58,13 +54,15 @@ public static class RankingStore
         entries.Add(entry);
         SortEntries();
 
-        if (entries.Count > MaxEntries) entries.RemoveRange(MaxEntries, entries.Count - MaxEntries);
+        // Novedad: Se ha eliminado la línea que borraba los excedentes.
+        // Ahora TODOS los registros se quedan en la lista 'entries' y se guardan.
 
         Save();
         Changed?.Invoke();
 
         int index = entries.IndexOf(entry);
-        return index < 0 ? -1 : index + 1;
+        
+        return index + 1;
     }
 
     /// <summary>Borra todas las marcas guardadas.</summary>
@@ -99,7 +97,6 @@ public static class RankingStore
         }
         catch (Exception exception)
         {
-            // Un fichero corrupto no debe impedir jugar: se arranca con el ranking vacio.
             Debug.LogWarning($"[Ranking] No se pudo leer '{FilePath}': {exception.Message}");
             entries.Clear();
         }
@@ -130,10 +127,6 @@ public static class RankingStore
         return FastestFirst ? comparison : -comparison;
     }
 
-    /// <summary>
-    /// Envoltorio de la lista. JsonUtility no serializa colecciones en la raiz del documento,
-    /// asi que necesita una clase con la lista dentro.
-    /// </summary>
     [Serializable]
     private class RankingData
     {
